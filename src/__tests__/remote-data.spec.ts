@@ -27,7 +27,10 @@ import { left, right } from 'fp-ts/lib/Either';
 
 describe('RemoteData', () => {
 	const double = (x: number) => x * 2;
-	const quad = compose(double, double);
+	const quad = compose(
+		double,
+		double,
+	);
 	const initialRD: RemoteData<string, number> = initial;
 	const pendingRD: RemoteData<string, number> = pending;
 	const refreshRD: RemoteData<string, number> = refresh(-1);
@@ -141,6 +144,7 @@ describe('RemoteData', () => {
 				expect(successRD.alt(pendingRD)).toBe(successRD);
 				expect(successRD.alt(initialRD)).toBe(successRD);
 				expect(successRD.alt(failureRD)).toBe(successRD);
+				expect(successRD.alt(refreshRD)).toBe(refreshRD);
 				expect(successRD.alt(successRD)).toBe(successRD);
 			});
 		});
@@ -633,7 +637,7 @@ describe('RemoteData', () => {
 				expect(successRD.altL(() => pendingRD)).toBe(successRD);
 				expect(successRD.altL(() => initialRD)).toBe(successRD);
 				expect(successRD.altL(() => failureRD)).toBe(successRD);
-				expect(successRD.altL(() => refreshRD)).toBe(successRD);
+				expect(successRD.altL(() => refreshRD)).toBe(refreshRD);
 				expect(successRD.altL(() => successRD)).toBe(successRD);
 			});
 		});

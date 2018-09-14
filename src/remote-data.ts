@@ -27,6 +27,284 @@ declare module 'fp-ts/lib/HKT' {
 	}
 }
 
+type RemoteTag = 'RemoteInitial' | 'RemotePending' | 'RemoteFailure' | 'RemoteRefresh' | 'RemoteSuccess';
+
+export interface IRemoteData<L, A> {
+	readonly _tag: RemoteTag;
+	// prettier-ignore
+	readonly '_URI': URI;
+	// prettier-ignore
+	readonly '_A': A;
+	// prettier-ignore
+	readonly '_L': L;
+
+	/**
+	 * `alt` short for alternative, takes another `RemoteData`. If `this` is a
+	 * "Right" part then it will be returned. If it is a "Left" part then it
+	 * will return the next "Right" part if it exist. If both are "Left" parts
+	 * then it will return next "Left" part.
+	 *
+	 * @example
+	 *
+	 * `initial.alt(pending) -> pending`
+	 *
+	 * `pending.alt(initial) -> initial`
+	 *
+	 * `failure(new Error('foo')).alt(success(1)) -> success(1)`
+	 *
+	 * `success.alt(refresh) -> refresh`
+	 */
+	alt: (fy: RemoteData<L, A>) => RemoteData<L, A>;
+
+	/**
+	 * Similar to `alt`, but lazy: it takes a function which returns
+	 * `RemoteData` object.
+	 */
+	altL: (fy: Lazy<RemoteData<L, A>>) => RemoteData<L, A>;
+
+	/**
+	 * `ap`, short for "apply". Takes a function `fab` that is in the context of
+	 * `RemoteData`, and applies that function to this `RemoteData`'s value. If
+	 * the `RemoteData` calling `ap` is "Left" part it will return same "Left"
+	 * part. If you pass "Left" part to `ap` as an argument, it will always
+	 * return same "Left" part.
+	 *
+	 * @example
+	 *
+	 * `success(1).ap(success(x => x + 1)) will return success(2)`.
+	 *
+	 * `success(1).ap(initial) will return initial`.
+	 *
+	 * `success(1).ap(refresh(x => x + 1)) will return refresh(2)`.
+	 *
+	 * `pending.ap(success(x => x+1)) will return pending`.
+	 *
+	 * `failure(new Error('err text')).ap(initial) will return initial.`
+	 */
+	ap: <B>(fab: RemoteData<L, Function1<A, B>>) => RemoteData<L, B>;
+
+	/**
+	 * Needed for "unwrap" value from `RemoteData` "container". It takes a
+	 * mapping from `RemoteData` types to another value.
+	 *
+	 * @example
+	 *
+	 * const caseMap: CaseMap = {
+	 *     initial: 'initial',
+	 *     pending: 'pending',
+	 *     failure: (err) => 'failed',
+	 *     refresh: (stale) => stale - 1,
+	 *     success: (value) => value + 1
+	 * }
+	 *
+	 * initial.caseOf(caseMap) will return 'initial'
+	 *
+	 * pending.caseOf(caseMap) will return 'pending'
+	 *
+	 * failure(new Error('error text')).caseOf(caseMap) will return 'failed'
+	 *
+	 * refresh(21).caseOf(caseMap) will return 20
+	 *
+	 * success(21).caseOf(caseMap) will return 22
+	 */
+	caseOf: <B>(caseMap: CaseMap<L, A, B>) => B;
+
+	/**
+	 * Takes a function `f` and returns the result of applying it to
+	 * `RemoteData` value. It's a bit like a `map`, but `f` should returns
+	 * `RemoteData<T>` instead of `T`. If `this` is "Left" part, then it will
+	 * return the same "Left" part.
+	 *
+	 * For example:
+	 *
+	 * `success(1).chain(x => success(x + 1)) will return success(2)`
+	 *
+	 * `success(2).chain(() => pending) will return pending`
+	 *
+	 * `initial.chain(x => success(x)) will return initial`
+	 */
+	chain: <B>(f: Function1<A, RemoteData<L, B>>) => RemoteData<L, B>;
+
+	/**
+	 * Takes a function `f` and returns a result of applying it to `RemoteData`.
+	 * It's a bit like a `chain`, but reversed: `f` takes a `RemoteData<T>` and
+	 * returns a `T`.
+	 */
+	extend: <B>(f: Function1<RemoteData<L, A>, B>) => RemoteData<L, B>;
+
+	/**
+	 * Similar to `caseMap` but takes the unwrapping value/function as arguments
+	 * instead of in a `CaseMap`.
+	 *
+	 * @example
+	 *
+	 * const foldInitial = 'initial'
+	 * const foldPending = 'pending'
+	 * const foldFailure = (err) => 'failed'
+	 * const foldRefresh = (stale) => stale - 1
+	 * const foldSuccess = (value) => value + 1
+	 *
+	 * initial.fold(foldInitial, foldPending, foldFailure, foldRefresh, foldSuccess) will return 'initial'
+	 *
+	 * pending.fold(foldInitial, foldPending, foldFailure, foldRefresh, foldSuccess) will return 'pending'
+	 *
+	 * failure(new Error('error text')).fold(foldInitial, foldRefresh, foldPending, foldFailure, foldSuccess) will return 'failed'
+	 *
+	 * refresh(21).fold(foldInitial, foldPending, foldFailure, foldRefresh, foldSuccess) will return 20
+	 *
+	 * success(21).fold(foldInitial, foldPending, foldFailure, foldRefresh, foldSuccess) will return 22
+	 */
+	fold: <B>(
+		initial: B,
+		pending: B,
+		failure: Function1<L, B>,
+		refresh: Function1<A, B>,
+		success: Function1<A, B>,
+	) => B;
+
+	/**
+	 * Same as `fold` but lazy: in `initial` and `pending` state it takes a
+	 * function instead of value.
+	 */
+	foldL: <B>(
+		initial: Lazy<B>,
+		pending: Lazy<B>,
+		failure: Function1<L, B>,
+		refresh: Function1<A, B>,
+		success: Function1<A, B>,
+	) => B;
+
+	/**
+	 * Takes a default value as an argument. If this `RemoteData` is "Left" it
+	 * will return default value. If this `RemoteData` is a "Right" it will
+	 * return the wrapped value.
+	 *
+	 * Note: Default value should be the same type as the wrapped value. If you
+	 * want to pass different type as default, use `caseOf`, `fold` or `foldL`.
+	 *
+	 * @example
+	 *
+	 * `some(1).getOrElse(999) will return 1`
+	 *
+	 * `initial.getOrElse(999) will return 999`
+	 */
+	getOrElse: (value: A) => A;
+
+	/**
+	 * Same as `getOrElse` but lazy.
+	 *
+	 * @example
+	 *
+	 * `some(1).getOrElseL(() => 999) will return 1`
+	 *
+	 * `initial.getOrElseL(() => 999) will return 999`
+	 */
+	getOrElseL: (f: Lazy<A>) => A;
+
+	/**
+	 * Takes a function which can operate on the type of the wrapped value. If
+	 * `this` is a "Left", it returns the "Left". If `this` is a "Right", it
+	 * applies the function to the wrapped value and returns the "Right" type
+	 * with the new value.
+	 *
+	 * @example
+	 *
+	 * `success(1).map(x => x + 99) will return success(100)`
+	 *
+	 * `refresh(1).map(x => x + 9) will return refresh(10)`
+	 *
+	 * `initial.map(x => x + 99) will return initial`
+	 *
+	 * `pending.map(x => x + 99) will return pending`
+	 *
+	 * `failure(new Error('error text')).map(x => x + 99) will return failure(new Error('error text')`
+	 */
+	map: <B>(f: Function1<A, B>) => RemoteData<L, B>;
+
+	/**
+	 * Similar to `map`, but takes a function that can operate on the
+	 * `RemoteFailure`'s `L` type.
+	 *
+	 * @example
+	 *
+	 * `success(1).map(x => 'new error text') will return success(1)`
+	 *
+	 * `initial.map(x => 'new error text') will return initial`
+	 *
+	 * `failure(new Error('error text')).map(x => 'new error text') will return failure(new Error('new error text'))`
+	 */
+	mapLeft: <M>(f: Function1<L, M>) => RemoteData<M, A>;
+
+	reduce: <B>(f: Function2<B, A, B>, b: B) => B;
+
+	/**
+	 * Type Guards
+	 */
+	isInitial: () => boolean;
+	isPending: () => boolean;
+	isFailure: () => boolean;
+	isRefresh: () => boolean;
+	isSuccess: () => boolean;
+
+	/**
+	 * Convert `RemoteData` to `Option`. "Left" part will be converted to
+	 * `None`. "Right" part will be converted to `Some`.
+	 *
+	 * For example:
+	 *
+	 * `success(2).toOption() will return some(2)`
+	 *
+	 * `refresh(2).toOption() will return some(2)`
+	 *
+	 * `initial.toOption() will return none`
+	 *
+	 * `pending.toOption() will return none`
+	 *
+	 * `failure(new Error('error text')).toOption() will return none`
+	 */
+	toOption: () => Option<A>;
+
+	/**
+	 * One more way to fold (unwrap) value from `RemoteData`. "Left" part will
+	 * return `null`. "Right" part will return unwrapped value.
+	 *
+	 * For example:
+	 *
+	 * `success(2).toNullable() will return 2`
+	 *
+	 * `refresh(2).toNullable() will return 2`
+	 *
+	 * `initial.toNullable() will return null`
+	 *
+	 * `pending.toNullable() will return null`
+	 *
+	 * `failure(new Error('error text)).toNullable() will return null`
+	 *
+	 */
+	toNullable: () => A | null;
+
+	/**
+	 * Returns string representation of `RemoteData`.
+	 */
+	toString: () => string;
+
+	/**
+	 * Compare values and returns `true` if they are identical, otherwise
+	 * returns `false`. "Left" part will return `false`. "Right" part will
+	 * call `Setoid`'s `equals` method.
+	 *
+	 * If you want to compare `RemoteData`'s values better use `getSetoid` or
+	 * `getOrd` helpers.
+	 */
+	contains: (S: Setoid<A>, a: A) => boolean;
+
+	/**
+	 * Takes a predicate and apply it to the wrapped value in a "Right" part.
+	 * "Left" part will return `false`.
+	 */
+	exists: (p: Predicate<A>) => boolean;
+}
+
 export interface CaseMap<L, A, B> {
 	failure: Function1<L, B>;
 	initial: B;
@@ -35,7 +313,7 @@ export interface CaseMap<L, A, B> {
 	success: Function1<A, B>;
 }
 
-export class RemoteInitial<L, A> {
+export class RemoteInitial<L, A> implements IRemoteData<L, A> {
 	readonly _tag: 'RemoteInitial' = 'RemoteInitial';
 	// prettier-ignore
 	readonly '_URI': URI;
@@ -971,14 +1249,14 @@ export class RemoteSuccess<L, A> {
 	 * `failure(new Error('err text')).alt(pending) will return pending`
 	 */
 	alt(fy: RemoteData<L, A>): RemoteData<L, A> {
-		return this;
+		return fy.fold(this, this, () => this, () => fy, () => this);
 	}
 
 	/**
 	 * Similar to `alt`, but lazy: it takes a function which returns `RemoteData` object.
 	 */
 	altL(fy: Lazy<RemoteData<L, A>>): RemoteData<L, A> {
-		return this;
+		return fy().fold(this, this, () => this, () => fy(), () => this);
 	}
 
 	/**
@@ -998,7 +1276,13 @@ export class RemoteSuccess<L, A> {
 	 * `failure(new Error('err text')).ap(initial) will return initial.`
 	 */
 	ap<B>(fab: RemoteData<L, Function1<A, B>>): RemoteData<L, B> {
-		return fab.fold(initial, pending, () => fab as any, value => refresh(this.value).map(value), value => this.map(value)); //tslint:disable-line no-use-before-declare
+		return fab.fold(
+			initial,
+			pending,
+			() => fab as any,
+			value => refresh(this.value).map(value),
+			value => this.map(value),
+		); //tslint:disable-line no-use-before-declare
 	}
 
 	/**
