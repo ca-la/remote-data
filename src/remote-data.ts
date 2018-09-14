@@ -27,6 +27,14 @@ declare module 'fp-ts/lib/HKT' {
 	}
 }
 
+export interface CaseMap<L, A, B> {
+	failure: Function1<L, B>;
+	initial: B;
+	pending: B;
+	refresh: Function1<A, B>;
+	success: Function1<A, B>;
+}
+
 export class RemoteInitial<L, A> {
 	readonly _tag: 'RemoteInitial' = 'RemoteInitial';
 	// prettier-ignore
@@ -125,8 +133,12 @@ export class RemoteInitial<L, A> {
 	 *
 	 * `success(21).fold(foldInitial, foldPending, foldFailure, foldSuccess) will return 22`
 	 */
-	fold<B>(initial: B, pending: B, failure: Function1<L, B>, success: Function1<A, B>): B {
+	fold<B>(initial: B, pending: B, failure: Function1<L, B>, refresh: Function1<A, B>, success: Function1<A, B>): B {
 		return initial;
+	}
+
+	caseOf<B>(caseMap: CaseMap<L, A, B>): B {
+		return caseMap.initial;
 	}
 
 	/**
@@ -139,7 +151,13 @@ export class RemoteInitial<L, A> {
 	 *
 	 * rest of example is similar to `fold`
 	 */
-	foldL<B>(initial: Lazy<B>, pending: Lazy<B>, failure: Function1<L, B>, success: Function1<A, B>): B {
+	foldL<B>(
+		initial: Lazy<B>,
+		pending: Lazy<B>,
+		failure: Function1<L, B>,
+		refresh: Function1<A, B>,
+		success: Function1<A, B>,
+	): B {
 		return initial();
 	}
 
@@ -233,6 +251,14 @@ export class RemoteInitial<L, A> {
 	 *
 	 */
 	isFailure(): this is RemoteFailure<L, A> {
+		return false;
+	}
+
+	/**
+	 * Returns true only if `RemoteData` is `RemoteRefresh`.
+	 *
+	 */
+	isRefresh(): this is RemoteRefresh<L, A> {
 		return false;
 	}
 
@@ -364,7 +390,7 @@ export class RemoteFailure<L, A> {
 	 * `failure(new Error('err text')).ap(initial) will return initial.`
 	 */
 	ap<B>(fab: RemoteData<L, Function1<A, B>>): RemoteData<L, B> {
-		return fab.fold(initial, pending, () => fab as any, () => this); //tslint:disable-line no-use-before-declare
+		return fab.fold(initial, pending, () => fab as any, () => this, () => this); //tslint:disable-line no-use-before-declare
 	}
 
 	/**
@@ -411,8 +437,12 @@ export class RemoteFailure<L, A> {
 	 *
 	 * `success(21).fold(foldInitial, foldPending, foldFailure, foldSuccess) will return 22`
 	 */
-	fold<B>(initial: B, pending: B, failure: Function1<L, B>, success: Function1<A, B>): B {
+	fold<B>(initial: B, pending: B, failure: Function1<L, B>, refresh: Function1<A, B>, success: Function1<A, B>): B {
 		return failure(this.error);
+	}
+
+	caseOf<B>(caseMap: CaseMap<L, A, B>): B {
+		return caseMap.failure(this.error);
 	}
 
 	/**
@@ -425,7 +455,13 @@ export class RemoteFailure<L, A> {
 	 *
 	 * rest of example is similar to `fold`
 	 */
-	foldL<B>(initial: Lazy<B>, pending: Lazy<B>, failure: Function1<L, B>, success: Function1<A, B>): B {
+	foldL<B>(
+		initial: Lazy<B>,
+		pending: Lazy<B>,
+		failure: Function1<L, B>,
+		refresh: Function1<A, B>,
+		success: Function1<A, B>,
+	): B {
 		return failure(this.error);
 	}
 
@@ -523,6 +559,14 @@ export class RemoteFailure<L, A> {
 	}
 
 	/**
+	 * Returns true only if `RemoteData` is `RemoteRefresh`.
+	 *
+	 */
+	isRefresh(): this is RemoteRefresh<L, A> {
+		return false;
+	}
+
+	/**
 	 * Returns true only if `RemoteData` is `RemoteSuccess`.
 	 *
 	 */
@@ -597,6 +641,310 @@ export class RemoteFailure<L, A> {
 	}
 }
 
+export class RemoteRefresh<L, A> {
+	readonly _tag: 'RemoteRefresh' = 'RemoteRefresh';
+	// prettier-ignore
+	readonly '_URI': URI;
+	// prettier-ignore
+	readonly '_A': A;
+	// prettier-ignore
+	readonly '_L': L;
+
+	constructor(readonly value: A) {}
+
+	/**
+	 * `alt` short for alternative, takes another `RemoteData`.
+	 * If `this` `RemoteData` is a `RemoteSuccess` type then it will be returned.
+	 * If it is a "Left" part then it will return the next `RemoteSuccess` if it exist.
+	 * If both are "Left" parts then it will return next "Left" part.
+	 *
+	 * For example:
+	 *
+	 * `sucess(1).alt(initial) will return success(1)`
+	 *
+	 * `pending.alt(success(2) will return success(2)`
+	 *
+	 * `failure(new Error('err text')).alt(pending) will return pending`
+	 */
+	alt(fy: RemoteData<L, A>): RemoteData<L, A> {
+		return fy.fold(this, this, () => this, () => this, () => fy);
+	}
+
+	/**
+	 * Similar to `alt`, but lazy: it takes a function which returns `RemoteData` object.
+	 */
+	altL(fy: Lazy<RemoteData<L, A>>): RemoteData<L, A> {
+		return fy().fold(this, this, () => this, () => this, () => fy());
+	}
+
+	/**
+	 * `ap`, short for "apply". Takes a function `fab` that is in the context of `RemoteData`,
+	 * and applies that function to this `RemoteData`'s value.
+	 * If the `RemoteData` calling `ap` is "Left" part it will return same "Left" part.
+	 * If you pass "Left" part to `ap` as an argument, it will return same "Left" part regardless on `RemoteData` which calls `ap`.
+	 *
+	 * For example:
+	 *
+	 * `success(1).ap(success(x => x + 1)) will return success(2)`.
+	 *
+	 * `success(1).ap(initial) will return initial`.
+	 *
+	 * `pending.ap(success(x => x+1)) will return pending`.
+	 *
+	 * `failure(new Error('err text')).ap(initial) will return initial.`
+	 */
+	ap<B>(fab: RemoteData<L, Function1<A, B>>): RemoteData<L, B> {
+		return fab.fold(initial, pending, () => fab as any, value => this.map(value), value => this.map(value)); //tslint:disable-line no-use-before-declare
+	}
+
+	/**
+	 * Takes a function `f` and returns a result of applying it to `RemoteData` value.
+	 * It's a bit like a `map`, but `f` should returns `RemoteData<T>` instead of `T` in `map`.
+	 * If this `RemoteData` is "Left" part, then it will return the same "Left" part.
+	 *
+	 * For example:
+	 *
+	 * `success(1).chain(x => success(x + 1)) will return success(2)`
+	 *
+	 * `success(2).chain(() => pending) will return pending`
+	 *
+	 * `initial.chain(x => success(x)) will return initial`
+	 */
+	chain<B>(f: Function1<A, RemoteData<L, B>>): RemoteData<L, B> {
+		return f(this.value);
+	}
+
+	/**
+	 * Takes a function `f` and returns a result of applying it to `RemoteData`.
+	 * It's a bit like a `chain`, but `f` should takes `RemoteData<T>` instead of returns it, and it should return T instead of takes it.
+	 */
+	extend<B>(f: Function1<RemoteData<L, A>, B>): RemoteData<L, B> {
+		return refresh(f(this)); //tslint:disable-line no-use-before-declare
+	}
+
+	/**
+	 * Needed for "unwrap" value from `RemoteData` "container".
+	 * It applies a function to each case in the data structure.
+	 *
+	 * For example:
+	 *
+	 * `const foldInitial = 'it's initial'
+	 * `const foldPending = 'it's pending'
+	 * `const foldFailure = (err) => 'it's failure'
+	 * `const foldSuccess = (data) => data + 1'
+	 *
+	 * `initial.fold(foldInitial, foldPending, foldFailure, foldSuccess) will return 'it's initial'`
+	 *
+	 * `pending.fold(foldInitial, foldPending, foldFailure, foldSuccess) will return 'it's pending'`
+	 *
+	 * `failure(new Error('error text')).fold(foldInitial, foldPending, foldFailure, foldSuccess) will return 'it's failure'`
+	 *
+	 * `success(21).fold(foldInitial, foldPending, foldFailure, foldSuccess) will return 22`
+	 */
+	fold<B>(initial: B, pending: B, failure: Function1<L, B>, refresh: Function1<A, B>, success: Function1<A, B>): B {
+		return refresh(this.value);
+	}
+
+	caseOf<B>(caseMap: CaseMap<L, A, B>): B {
+		return caseMap.refresh(this.value);
+	}
+
+	/**
+	 * Same as `fold` but lazy: in `initial` and `pending` state it takes a function instead of value.
+	 *
+	 * For example:
+	 *
+	 * `const foldInitial = () => 'it's initial'
+	 * `const foldPending = () => 'it's pending'
+	 *
+	 * rest of example is similar to `fold`
+	 */
+	foldL<B>(
+		initial: Lazy<B>,
+		pending: Lazy<B>,
+		failure: Function1<L, B>,
+		refresh: Function1<A, B>,
+		success: Function1<A, B>,
+	): B {
+		return refresh(this.value);
+	}
+
+	/**
+	 * Same as `getOrElse` but lazy: it pass as an argument a function which returns a default value.
+	 *
+	 * For example:
+	 *
+	 * `some(1).getOrElse(() => 999) will return 1`
+	 *
+	 * `initial.getOrElseValue(() => 999) will return 999`
+	 */
+	getOrElseL(f: Lazy<A>): A {
+		return this.value;
+	}
+
+	/**
+	 * Takes a function `f`.
+	 * If it maps on `RemoteSuccess` then it will apply a function to `RemoteData`'s value
+	 * If it maps on "Left" part then it will return the same "Left" part.
+	 *
+	 * For example:
+	 *
+	 * `success(1).map(x => x + 99) will return success(100)`
+	 *
+	 * `initial.map(x => x + 99) will return initial`
+	 *
+	 * `pending.map(x => x + 99) will return pending`
+	 *
+	 * `failure(new Error('error text')).map(x => x + 99) will return failure(new Error('error text')`
+	 */
+	map<B>(f: Function1<A, B>): RemoteData<L, B> {
+		return refresh(f(this.value)); //tslint:disable-line no-use-before-declare
+	}
+
+	/**
+	 * Similar to `map`, but it only map a `RemoteFailure` ("Left" part where we have some data, so we can map it).
+	 *
+	 * For example:
+	 *
+	 * `success(1).map(x => 'new error text') will return success(1)`
+	 *
+	 * `initial.map(x => 'new error text') will return initial`
+	 *
+	 * `failure(new Error('error text')).map(x => 'new error text') will return failure(new Error('new error text'))`
+	 */
+	mapLeft<M>(f: Function1<L, M>): RemoteData<M, A> {
+		return this as any;
+	}
+
+	/**
+	 * Takes a default value as an argument.
+	 * If this `RemoteData` is "Left" part it will return default value.
+	 * If this `RemoteData` is `RemoteSuccess` it will return it's value ("wrapped" value, not default value)
+	 *
+	 * Note: Default value should be the same type as `RemoteData` (internal) value, if you want to pass different type as default, use `fold` or `foldL`.
+	 *
+	 * For example:
+	 *
+	 * `some(1).getOrElse(999) will return 1`
+	 *
+	 * `initial.getOrElseValue(999) will return 999`
+	 *
+	 */
+	getOrElse(value: A): A {
+		return this.value;
+	}
+
+	reduce<B>(f: Function2<B, A, B>, b: B): B {
+		return f(b, this.value);
+	}
+
+	/**
+	 * Returns true only if `RemoteData` is `RemoteInitial`.
+	 *
+	 */
+	isInitial(): this is RemoteInitial<L, A> {
+		return false;
+	}
+
+	/**
+	 * Returns true only if `RemoteData` is `RemotePending`.
+	 *
+	 */
+	isPending(): this is RemotePending<L, A> {
+		return false;
+	}
+
+	/**
+	 * Returns true only if `RemoteData` is `RemoteFailure`.
+	 *
+	 */
+	isFailure(): this is RemoteFailure<L, A> {
+		return false;
+	}
+
+	/**
+	 * Returns true only if `RemoteData` is `RemoteRefresh`.
+	 *
+	 */
+	isRefresh(): this is RemoteRefresh<L, A> {
+		return true;
+	}
+
+	/**
+	 * Returns true only if `RemoteData` is `RemoteSuccess`.
+	 *
+	 */
+	isSuccess(): this is RemoteSuccess<L, A> {
+		return false;
+	}
+
+	/**
+	 * Convert `RemoteData` to `Option`.
+	 * "Left" part will be converted to `None`.
+	 * `RemoteSuccess` will be converted to `Some`.
+	 *
+	 * For example:
+	 *
+	 * `success(2).toOption() will return some(2)`
+	 *
+	 * `initial.toOption() will return none`
+	 *
+	 * `pending.toOption() will return none`
+	 *
+	 * `failure(new Error('error text')).toOption() will return none`
+	 */
+	toOption(): Option<A> {
+		return some(this.value);
+	}
+
+	/**
+	 * One more way to fold (unwrap) value from `RemoteData`.
+	 * "Left" part will return `null`.
+	 * `RemoteSuccess` will return value.
+	 *
+	 * For example:
+	 *
+	 * `success(2).toNullable() will return 2`
+	 *
+	 * `initial.toNullable() will return null`
+	 *
+	 * `pending.toNullable() will return null`
+	 *
+	 * `failure(new Error('error text)).toNullable() will return null`
+	 *
+	 */
+	toNullable(): A | null {
+		return this.value;
+	}
+
+	/**
+	 * Returns string representation of `RemoteData`.
+	 */
+	toString(): string {
+		return `refresh(${toString(this.value)})`;
+	}
+
+	/**
+	 * Compare values and returns `true` if they are identical, otherwise returns `false`.
+	 * "Left" part will return `false`.
+	 * `RemoteSuccess` will call `Setoid`'s `equals` method.
+	 *
+	 * If you want to compare `RemoteData`'s values better use `getSetoid` or `getOrd` helpers.
+	 *
+	 */
+	contains(S: Setoid<A>, a: A): boolean {
+		return S.equals(this.value, a);
+	}
+
+	/**
+	 * Takes a predicate and apply it to `RemoteSuccess` value.
+	 * "Left" part will return `false`.
+	 */
+	exists(p: Predicate<A>): boolean {
+		return p(this.value);
+	}
+}
+
 export class RemoteSuccess<L, A> {
 	readonly _tag: 'RemoteSuccess' = 'RemoteSuccess';
 	// prettier-ignore
@@ -650,7 +998,7 @@ export class RemoteSuccess<L, A> {
 	 * `failure(new Error('err text')).ap(initial) will return initial.`
 	 */
 	ap<B>(fab: RemoteData<L, Function1<A, B>>): RemoteData<L, B> {
-		return fab.fold(initial, pending, () => fab as any, value => this.map(value)); //tslint:disable-line no-use-before-declare
+		return fab.fold(initial, pending, () => fab as any, value => refresh(this.value).map(value), value => this.map(value)); //tslint:disable-line no-use-before-declare
 	}
 
 	/**
@@ -697,8 +1045,12 @@ export class RemoteSuccess<L, A> {
 	 *
 	 * `success(21).fold(foldInitial, foldPending, foldFailure, foldSuccess) will return 22`
 	 */
-	fold<B>(initial: B, pending: B, failure: Function1<L, B>, success: Function1<A, B>): B {
+	fold<B>(initial: B, pending: B, failure: Function1<L, B>, refresh: Function1<A, B>, success: Function1<A, B>): B {
 		return success(this.value);
+	}
+
+	caseOf<B>(caseMap: CaseMap<L, A, B>): B {
+		return caseMap.success(this.value);
 	}
 
 	/**
@@ -711,7 +1063,13 @@ export class RemoteSuccess<L, A> {
 	 *
 	 * rest of example is similar to `fold`
 	 */
-	foldL<B>(initial: Lazy<B>, pending: Lazy<B>, failure: Function1<L, B>, success: Function1<A, B>): B {
+	foldL<B>(
+		initial: Lazy<B>,
+		pending: Lazy<B>,
+		failure: Function1<L, B>,
+		refresh: Function1<A, B>,
+		success: Function1<A, B>,
+	): B {
 		return success(this.value);
 	}
 
@@ -805,6 +1163,14 @@ export class RemoteSuccess<L, A> {
 	 *
 	 */
 	isFailure(): this is RemoteFailure<L, A> {
+		return false;
+	}
+
+	/**
+	 * Returns true only if `RemoteData` is `RemoteRefresh`.
+	 *
+	 */
+	isRefresh(): this is RemoteRefresh<L, A> {
 		return false;
 	}
 
@@ -934,7 +1300,7 @@ export class RemotePending<L, A> {
 	 * `failure(new Error('err text')).ap(initial) will return initial.`
 	 */
 	ap<B>(fab: RemoteData<L, Function1<A, B>>): RemoteData<L, B> {
-		return fab.fold(initial, pending as any, () => pending, () => pending); //tslint:disable-line no-use-before-declare
+		return fab.fold(initial, pending as any, () => pending, () => pending, () => pending); //tslint:disable-line no-use-before-declare
 	}
 
 	/**
@@ -981,8 +1347,12 @@ export class RemotePending<L, A> {
 	 *
 	 * `success(21).fold(foldInitial, foldPending, foldFailure, foldSuccess) will return 22`
 	 */
-	fold<B>(initial: B, pending: B, failure: Function1<L, B>, success: Function1<A, B>): B {
+	fold<B>(initial: B, pending: B, failure: Function1<L, B>, refresh: Function1<A, B>, success: Function1<A, B>): B {
 		return pending;
+	}
+
+	caseOf<B>(caseMap: CaseMap<L, A, B>): B {
+		return caseMap.pending;
 	}
 
 	/**
@@ -995,7 +1365,13 @@ export class RemotePending<L, A> {
 	 *
 	 * rest of example is similar to `fold`
 	 */
-	foldL<B>(initial: Lazy<B>, pending: Lazy<B>, failure: Function1<L, B>, success: Function1<A, B>): B {
+	foldL<B>(
+		initial: Lazy<B>,
+		pending: Lazy<B>,
+		failure: Function1<L, B>,
+		refresh: Function1<A, B>,
+		success: Function1<A, B>,
+	): B {
 		return pending();
 	}
 
@@ -1093,6 +1469,14 @@ export class RemotePending<L, A> {
 	}
 
 	/**
+	 * Returns true only if `RemoteData` is `RemoteRefresh`.
+	 *
+	 */
+	isRefresh(): this is RemoteRefresh<L, A> {
+		return false;
+	}
+
+	/**
 	 * Returns true only if `RemoteData` is `RemoteSuccess`.
 	 *
 	 */
@@ -1179,7 +1563,12 @@ export class RemotePending<L, A> {
  * @see https://medium.com/@gcanti/slaying-a-ui-antipattern-with-flow-5eed0cfb627b
  *
  */
-export type RemoteData<L, A> = RemoteInitial<L, A> | RemoteFailure<L, A> | RemoteSuccess<L, A> | RemotePending<L, A>;
+export type RemoteData<L, A> =
+	| RemoteInitial<L, A>
+	| RemoteFailure<L, A>
+	| RemoteRefresh<L, A>
+	| RemoteSuccess<L, A>
+	| RemotePending<L, A>;
 
 //Monad
 const of = <L, A>(value: A): RemoteSuccess<L, A> => new RemoteSuccess(value);
@@ -1206,6 +1595,8 @@ function traverse<F>(
 	return (ta, f) => {
 		if (ta.isSuccess()) {
 			return F.map(f(ta.value), of);
+		} else if (ta.isRefresh()) {
+			return F.map(f(ta.value), refresh);
 		} else {
 			return F.of(ta as any);
 		}
@@ -1220,6 +1611,7 @@ const extend = <L, A, B>(fla: RemoteData<L, A>, f: Function1<RemoteData<L, A>, B
 
 //constructors
 export const failure = <L, A>(error: L): RemoteFailure<L, A> => new RemoteFailure(error);
+export const refresh = <L, A>(stale: A): RemoteRefresh<L, A> => new RemoteRefresh(stale);
 export const success: <L, A>(value: A) => RemoteSuccess<L, A> = of;
 export const pending: RemotePending<never, never> = new RemotePending<never, never>();
 export const initial: RemoteInitial<never, never> = new RemoteInitial<never, never>();
@@ -1229,6 +1621,7 @@ const zero = <L, A>(): RemoteData<L, A> => initial;
 
 //filters
 export const isFailure = <L, A>(data: RemoteData<L, A>): data is RemoteFailure<L, A> => data.isFailure();
+export const isRefresh = <L, A>(data: RemoteData<L, A>): data is RemoteRefresh<L, A> => data.isRefresh();
 export const isSuccess = <L, A>(data: RemoteData<L, A>): data is RemoteSuccess<L, A> => data.isSuccess();
 export const isPending = <L, A>(data: RemoteData<L, A>): data is RemotePending<L, A> => data.isPending();
 export const isInitial = <L, A>(data: RemoteData<L, A>): data is RemoteInitial<L, A> => data.isInitial();
@@ -1244,8 +1637,9 @@ export const getSetoid = <L, A>(SL: Setoid<L>, SA: Setoid<A>): Setoid<RemoteData
 			x.foldL(
 				() => y.isInitial(),
 				() => y.isPending(),
-				xError => y.foldL(constFalse, constFalse, yError => SL.equals(xError, yError), constFalse),
-				ax => y.foldL(constFalse, constFalse, constFalse, ay => SA.equals(ax, ay)),
+				xError => y.foldL(constFalse, constFalse, yError => SL.equals(xError, yError), constFalse, constFalse),
+				ax => y.foldL(constFalse, constFalse, constFalse, ay => SA.equals(ax, ay), ay => SA.equals(ax, ay)),
+				ax => y.foldL(constFalse, constFalse, constFalse, ay => SA.equals(ax, ay), ay => SA.equals(ax, ay)),
 			),
 	};
 };
@@ -1257,10 +1651,25 @@ export const getOrd = <L, A>(OL: Ord<L>, OA: Ord<A>): Ord<RemoteData<L, A>> => {
 		compare: (x, y) =>
 			sign(
 				x.foldL(
-					() => y.fold(0, -1, () => -1, () => -1),
-					() => y.fold(1, 0, () => -1, () => -1),
-					xError => y.fold(1, 1, yError => OL.compare(xError, yError), () => -1),
-					xValue => y.fold(1, 1, () => 1, yValue => OA.compare(xValue, yValue)),
+					() => y.fold(0, -1, () => -1, () => -1, () => -1),
+					() => y.fold(1, 0, () => -1, () => -1, () => -1),
+					xError => y.fold(1, 1, yError => OL.compare(xError, yError), () => -1, () => -1),
+					xValue =>
+						y.fold(
+							1,
+							1,
+							() => 1,
+							yValue => OA.compare(xValue, yValue),
+							yValue => OA.compare(xValue, yValue),
+						),
+					xValue =>
+						y.fold(
+							1,
+							1,
+							() => 1,
+							yValue => OA.compare(xValue, yValue),
+							yValue => OA.compare(xValue, yValue),
+						),
 				),
 			),
 	};
@@ -1271,11 +1680,25 @@ export const getSemigroup = <L, A>(SL: Semigroup<L>, SA: Semigroup<A>): Semigrou
 	return {
 		concat: (x, y) => {
 			return x.foldL(
-				() => y.fold(y, y, () => y, () => y),
-				() => y.fold(x, y, () => y, () => y),
-
-				xError => y.fold(x, x, yError => failure(SL.concat(xError, yError)), () => y),
-				xValue => y.fold(x, x, () => x, yValue => success(SA.concat(xValue, yValue))),
+				() => y.fold(y, y, () => y, () => y, () => y),
+				() => y.fold(x, y, () => y, () => y, () => y),
+				xError => y.fold(x, x, yError => failure(SL.concat(xError, yError)), () => y, () => y),
+				xValue =>
+					y.fold(
+						x,
+						x,
+						() => x,
+						yValue => success(SA.concat(xValue, yValue)),
+						yValue => refresh(SA.concat(xValue, yValue)),
+					),
+				xValue =>
+					y.fold(
+						x,
+						x,
+						() => x,
+						yValue => refresh(SA.concat(xValue, yValue)),
+						yValue => success(SA.concat(xValue, yValue)),
+					),
 			);
 		},
 	};
