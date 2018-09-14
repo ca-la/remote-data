@@ -1,31 +1,48 @@
-# RemoteData type [![Build Status](https://travis-ci.org/devex-web-frontend/remote-data-ts.svg?branch=master)](https://travis-ci.org/devex-web-frontend/remote-data-ts)
+# RemoteData
+## A Fork of [remote-data-ts](https://github.com/devex-web-frontend/remote-data-ts)
+
 ### Description
-RemoteData is an ADT (algebraic data type) described in [this article](https://medium.com/@gcanti/slaying-a-ui-antipattern-with-flow-5eed0cfb627b). Heavily based on [fp-ts](https://github.com/gcanti/fp-ts) lib.
+
+RemoteData is an ADT (algebraic data type) described in [this
+article](https://medium.com/@gcanti/slaying-a-ui-antipattern-with-flow-5eed0cfb627b).
+Heavily based on [fp-ts](https://github.com/gcanti/fp-ts) lib.
+
+### How is this different from `devex-web-frontend/remote-data-ts`?
+
+- The main difference is the addition of another type in the union:
+  `RemoteRefresh` which captures the state where you have data, but you are
+  refreshing it from your remote data source.
+- Did some reorganizing of the code for personal ergonomics.
 
 ### Installation
-`npm i --save @devexperts/remote-data-ts`
+
+```bash
+npm i --save @scotttrinh/remote-data-ts
+```
 
 ### How to lift (wrap) your data in RemoteData:
-As you remember RemoteData is an union of few types: `RemoteInitial`, `RemotePending`, `RemoteFailure` and `RemoteSuccess`.
+RemoteData is an union of few types: `RemoteInitial`, `RemotePending`,
+`RemoteFailure`, `RemoteRefresh`, and `RemoteSuccess`.
 
-While your data in **initial** or **pending** state just use `initial` or `pending` constant, because you don't have any **real** values in this case.
+While your data in **initial** or **pending** state just use the `initial` or
+`pending` constant.
 
 ```ts
-import { initial, pending } from '@devexperts/remote-data-ts';
+import { initial, pending } from '@scotttrinh/remote-data-ts';
 
 const customers = initial;
 // or
 const customers = pending;
 ```
 
-When you receive data from server, use `failure` or `success` function, it depends on what you received:
+When you receive data from server, use the `failure` or `success` constructor:
 
 ```ts
-import { failure, success } from '@devexperts/remote-data-ts';
+import { failure, success } from '@scotttrinh/remote-data-ts';
 import { apiClient } from 'apiClient';
 import { TCustomer } from './MyModel';
 
-const getCustomers = (): RemoteData<TCustomer[]> => {
+const getCustomers = (): RemoteData<Error, TCustomer[]> => {
    const rawData: TCustomer[] = apiClient.get('/customers');
 
    try {
@@ -38,6 +55,8 @@ const getCustomers = (): RemoteData<TCustomer[]> => {
    }
 }
 ```
+
+When you need to re-fetch or refresh your data, use the `refresh` constructor.
 
 ### How to fold (unwrap) your data from RemoteData:
 Finally you pass data to the component and want to render values, so now it's time to get our values back from RemoteData wrapper:
@@ -54,9 +73,7 @@ const CustomersList: SFC<TCustomersList> = ({ entities }) => entities.foldL(
     () => <NoData />,
     () => <Pending />,
     err => <Failure error={err} />,
+    stale => <Refreshing oldItems={stale} />
     data => <ul>{data.map(item => <li>{item.name}</li>)}</ul>
 );
 ```
-
-### Docs & Examples
-Coming soon (check the [source](src/remote-data.ts))
