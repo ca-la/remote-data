@@ -12,7 +12,12 @@ Heavily based on [fp-ts](https://github.com/gcanti/fp-ts) lib.
 - The main difference is the addition of another type in the union:
   `RemoteRefresh` which captures the state where you have data, but you are
   refreshing it from your remote data source.
+  - Considered a `Right`
+    - The value in `RemoteRefresh` will be mapped over, etc.
+    - `#toOption` returns `Some`
 - Did some reorganizing of the code for personal ergonomics.
+- Added a `caseOf` method that is an object version of `fold` since there are so
+  many states! Inspired by `daggy`'s `#cata` method.
 
 ### Installation
 
