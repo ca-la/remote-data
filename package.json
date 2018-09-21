@@ -1,5 +1,5 @@
 {
-  "name": "@scotttrinh/remote-data-ts",
+  "name": "@cala/remote-data",
   "version": "1.0.0",
   "main": "dist/remote-data.js",
   "typings": "dist/remote-data.d.ts",
@@ -10,9 +10,9 @@
     "jest": "jest",
     "prettier": "prettier --list-different \"./src/**/*.ts\"",
     "prettier:fix": "prettier --write \"./src/**/*.ts\"",
-    "prepublishOnly": "npm run test && npm run build"
+    "prepublish": "npm run test && npm run build"
   },
-  "author": "Scott Trinh",
+  "author": "CALA <devops@ca.la>",
   "license": "MPL-2.0",
   "devDependencies": {
     "@types/jest": "^23.3.2",
@@ -35,12 +35,12 @@
   "dependencies": {},
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/scotttrinh/remote-data-ts.git"
+    "url": "git@github.com:ca-la/remote-data.git"
   },
   "bugs": {
-    "url": "https://github.com/scotttrinh/remote-data-ts/issues"
+    "url": "https://github.com/ca-la/remote-data/issues"
   },
-  "homepage": "https://github.com/scotttrinh/remote-data-ts#readme",
+  "homepage": "https://github.com/ca-la/remote-data#readme",
   "description": "Algebraic Data Type for Remote Data",
   "tags": [
     "typescript",

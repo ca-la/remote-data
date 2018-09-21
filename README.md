@@ -22,7 +22,7 @@ Heavily based on [fp-ts](https://github.com/gcanti/fp-ts) lib.
 ### Installation
 
 ```bash
-npm i --save @scotttrinh/remote-data-ts
+npm i --save @cala/remote-data-ts
 ```
 
 ### How to lift (wrap) your data in RemoteData:
@@ -33,7 +33,7 @@ While your data in **initial** or **pending** state just use the `initial` or
 `pending` constant.
 
 ```ts
-import { initial, pending } from '@scotttrinh/remote-data-ts';
+import { initial, pending } from '@cala/remote-data-ts';
 
 const customers = initial;
 // or
@@ -43,7 +43,7 @@ const customers = pending;
 When you receive data from server, use the `failure` or `success` constructor:
 
 ```ts
-import { failure, success } from '@scotttrinh/remote-data-ts';
+import { failure, success } from '@cala/remote-data-ts';
 import { apiClient } from 'apiClient';
 import { TCustomer } from './MyModel';
 
