@@ -83,6 +83,10 @@ export class RemotePending<L, A> implements IRemoteData<L, A> {
     return value;
   }
 
+  recover<B>(f: Function1<L, Option<B>>): RemoteData<L, A | B> {
+    return this;
+  }
+
   reduce<B>(f: Function2<B, A, B>, b: B): B {
     return b;
   }

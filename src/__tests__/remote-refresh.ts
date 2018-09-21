@@ -1,5 +1,5 @@
 import anyTest, { TestInterface } from 'ava';
-import { some } from 'fp-ts/lib/Option';
+import { some, none } from 'fp-ts/lib/Option';
 import { setoidNumber } from 'fp-ts/lib/Setoid';
 import { TestContext } from './fixtures';
 
@@ -76,6 +76,13 @@ test('mapLeft', t => {
   const f2 = () => 1;
 
   t.deepEqual(refreshRD.mapLeft(f2), refresh(-1));
+});
+
+test('recover', t => {
+  const { refreshRD } = t.context;
+  const f = (error: string) => (error === 'Not authorized' ? some(401) : none);
+
+  t.deepEqual(refreshRD.recover(f), refreshRD);
 });
 
 test('type helpers', t => {

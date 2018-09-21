@@ -5,6 +5,7 @@ import {
   failure,
   pending,
   initial,
+  success,
   RemoteInitial,
   RemotePending,
   RemoteRefresh,
@@ -79,11 +80,15 @@ export class RemoteFailure<L, A> implements IRemoteData<L, A> {
   }
 
   mapLeft<M>(f: Function1<L, M>): RemoteData<M, A> {
-    return failure(f(this.error)); //tslint:disable-line no-use-before-declare
+    return failure(f(this.error));
   }
 
   getOrElse(value: A): A {
     return value;
+  }
+
+  recover<B>(f: Function1<L, Option<B>>): RemoteData<L, A | B> {
+    return f(this.error).fold<RemoteData<L, A | B>>(this, success);
   }
 
   reduce<B>(f: Function2<B, A, B>, b: B): B {

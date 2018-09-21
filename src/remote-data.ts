@@ -251,6 +251,20 @@ export interface IRemoteData<L, A> {
    */
   mapLeft: <M>(f: Function1<L, M>) => RemoteData<M, A>;
 
+  /**
+   * Transforms a `RemoteFailure` into a `RemoteSuccess` if the passed function
+   * returns `Some<B>`
+   *
+   * @example
+   * `const f = (error: string) => (error === 'Not authorized' ? some(401) : none)`
+   * `initial.recover(f); // RemoteInitial`
+   * `refresh.recover(f); // RemoteRefresh`
+   * `failure('Not authorized').recover(f); // RemoteSuccess(401)`
+   * `failure('Not found').recover(f); // RemoteFailure`
+   * `success(foo).recover(f); // RemoteSuccess(foo)`
+   */
+  recover: <B>(f: Function1<L, Option<B>>) => RemoteData<L, A | B>;
+
   reduce: <B>(f: Function2<B, A, B>, b: B) => B;
 
   /**

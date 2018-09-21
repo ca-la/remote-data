@@ -93,6 +93,10 @@ export class RemoteSuccess<L, A> implements IRemoteData<L, A> {
     return this.value;
   }
 
+  recover<B>(f: Function1<L, Option<B>>): RemoteData<L, A | B> {
+    return this;
+  }
+
   reduce<B>(f: Function2<B, A, B>, b: B): B {
     return f(b, this.value);
   }
