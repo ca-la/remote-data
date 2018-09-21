@@ -64,7 +64,8 @@ const getCustomers = (): RemoteData<Error, TCustomer[]> => {
 When you need to re-fetch or refresh your data, use the `refresh` constructor.
 
 ### How to fold (unwrap) your data from RemoteData:
-Finally you pass data to the component and want to render values, so now it's time to get our values back from RemoteData wrapper:
+Finally you pass data to the component and want to render values, so now it's
+time to get our values back from RemoteData wrapper:
 
 ```ts
 import { NoData, Pending, Failure } from './MyPlaceholders';
@@ -81,4 +82,14 @@ const CustomersList: SFC<TCustomersList> = ({ entities }) => entities.foldL(
     stale => <Refreshing oldItems={stale} />
     data => <ul>{data.map(item => <li>{item.name}</li>)}</ul>
 );
+
+// or caseOf
+
+const CustomersList: SFC<TCustomersList> = ({ entities }) => entities.caseOf({
+    initial: <NoData />,
+    pending: <Pending />,
+    failure: err => <Failure error={err} />,
+    refresh: stale => <Refreshing oldItems={stale} />
+    success: data => <ul>{data.map(item => <li>{item.name}</li>)}</ul>
+});
 ```
