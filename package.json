@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "main": "dist/remote-data.js",
   "typings": "dist/remote-data.d.ts",
+  "files": [
+    "dist/"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "npm run tslint && npm run prettier && ava",
