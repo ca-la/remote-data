@@ -6,7 +6,6 @@
     "tslint-plugin-prettier"
   ],
   "rules": {
-    "no-namespace": false,
     "prettier": true
   }
 }
