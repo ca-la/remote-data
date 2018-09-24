@@ -57,9 +57,8 @@ test('refresh', t => {
   t.is(concat(refreshRD, initialRD), refreshRD);
   t.is(concat(refreshRD, pendingRD), refreshRD);
   t.is(concat(refreshRD, failureRD), refreshRD);
-  t.deepEqual(concat(success(1), refresh(1)), refresh(semigroupSum.concat(1, 1)));
+  t.deepEqual(concat(refresh(1), refresh(1)), refresh(semigroupSum.concat(1, 1)));
   t.deepEqual(concat(refresh(1), success(1)), refresh(semigroupSum.concat(1, 1)));
-  t.deepEqual(concat(success(1), success(1)), success(semigroupSum.concat(1, 1)));
 });
 
 test('success', t => {
@@ -69,6 +68,5 @@ test('success', t => {
   t.is(concat(successRD, pendingRD), successRD);
   t.is(concat(successRD, failureRD), successRD);
   t.deepEqual(concat(success(1), refresh(1)), refresh(semigroupSum.concat(1, 1)));
-  t.deepEqual(concat(refresh(1), success(1)), refresh(semigroupSum.concat(1, 1)));
   t.deepEqual(concat(success(1), success(1)), success(semigroupSum.concat(1, 1)));
 });

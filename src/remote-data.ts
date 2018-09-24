@@ -498,20 +498,20 @@ export const getSemigroup = <L, A>(
         () => y.fold(y, y, () => y, () => y, () => y),
         () => y.fold(x, y, () => y, () => y, () => y),
         xError => y.fold(x, x, yError => failure(SL.concat(xError, yError)), () => y, () => y),
-        xValue =>
+        xStale =>
           y.fold(
             x,
             x,
             () => x,
-            yValue => success(SA.concat(xValue, yValue)),
-            yValue => refresh(SA.concat(xValue, yValue))
+            yStale => refresh(SA.concat(xStale, yStale)),
+            yValue => refresh(SA.concat(xStale, yValue))
           ),
         xValue =>
           y.fold(
             x,
             x,
             () => x,
-            yValue => refresh(SA.concat(xValue, yValue)),
+            yStale => refresh(SA.concat(xValue, yStale)),
             yValue => success(SA.concat(xValue, yValue))
           )
       );
