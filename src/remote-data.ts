@@ -34,7 +34,7 @@ export const URI = '@cala/remote-data';
 export type URI = typeof URI;
 declare module 'fp-ts/lib/HKT' {
   interface URI2HKT2<L, A> {
-    RemoteData: RemoteData<L, A>;
+    '@cala/remote-data': RemoteData<L, A>;
   }
 }
 
