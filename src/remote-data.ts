@@ -30,7 +30,7 @@ export { RemoteSuccess } from './success';
 import { RemotePending } from './pending';
 export { RemotePending } from './pending';
 
-export const URI = 'RemoteData';
+export const URI = '@cala/remote-data';
 export type URI = typeof URI;
 declare module 'fp-ts/lib/HKT' {
   interface URI2HKT2<L, A> {
