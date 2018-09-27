@@ -11,7 +11,8 @@ import {
   CaseMap,
   URI,
   IRemoteData,
-  RemoteData
+  RemoteData,
+  RemoteJSON
 } from './remote-data';
 
 export class RemotePending<L, A> implements IRemoteData<L, A> {
@@ -117,6 +118,13 @@ export class RemotePending<L, A> implements IRemoteData<L, A> {
 
   toString(): string {
     return 'pending';
+  }
+
+  toJSON(): RemoteJSON<L, A> {
+    return {
+      _URI: URI,
+      _tag: this._tag
+    };
   }
 
   contains(S: Setoid<A>, a: A): boolean {

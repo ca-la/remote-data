@@ -12,7 +12,8 @@ import {
   CaseMap,
   URI,
   IRemoteData,
-  RemoteData
+  RemoteData,
+  RemoteJSON
 } from './remote-data';
 
 export class RemoteRefresh<L, A> implements IRemoteData<L, A> {
@@ -126,6 +127,14 @@ export class RemoteRefresh<L, A> implements IRemoteData<L, A> {
 
   toString(): string {
     return `refresh(${toString(this.value)})`;
+  }
+
+  toJSON(): RemoteJSON<L, A> {
+    return {
+      _URI: URI,
+      _tag: this._tag,
+      value: this.value
+    };
   }
 
   contains(S: Setoid<A>, a: A): boolean {

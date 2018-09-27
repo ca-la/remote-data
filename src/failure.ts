@@ -12,7 +12,8 @@ import {
   CaseMap,
   URI,
   IRemoteData,
-  RemoteData
+  RemoteData,
+  RemoteJSON
 } from './remote-data';
 
 export class RemoteFailure<L, A> implements IRemoteData<L, A> {
@@ -120,6 +121,14 @@ export class RemoteFailure<L, A> implements IRemoteData<L, A> {
 
   toString(): string {
     return `failure(${toString(this.error)})`;
+  }
+
+  toJSON(): RemoteJSON<L, A> {
+    return {
+      _URI: URI,
+      _tag: this._tag,
+      error: this.error
+    };
   }
 
   contains(S: Setoid<A>, a: A): boolean {

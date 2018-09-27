@@ -45,6 +45,13 @@ type RemoteTag =
   | 'RemoteRefresh'
   | 'RemoteSuccess';
 
+export type RemoteJSON<L, A> =
+  | { _URI: URI; _tag: 'RemoteInitial' }
+  | { _URI: URI; _tag: 'RemotePending' }
+  | { _URI: URI; _tag: 'RemoteFailure'; error: L }
+  | { _URI: URI; _tag: 'RemoteRefresh'; value: A }
+  | { _URI: URI; _tag: 'RemoteSuccess'; value: A };
+
 export interface IRemoteData<L, A> {
   readonly _tag: RemoteTag;
   // prettier-ignore
@@ -305,6 +312,11 @@ export interface IRemoteData<L, A> {
   toString: () => string;
 
   /**
+   * Returns string representation of `RemoteData`.
+   */
+  toJSON: () => RemoteJSON<L, A>;
+
+  /**
    * Compare values and returns `true` if they are identical, otherwise
    * returns `false`. "Left" part will return `false`. "Right" part will
    * call `Setoid`'s `equals` method.
@@ -548,6 +560,21 @@ export function fromPredicate<L, A>(
   whenFalse: Function1<A, L>
 ): Function1<A, RemoteData<L, A>> {
   return a => (predicate(a) ? success(a) : failure(whenFalse(a)));
+}
+
+export function fromJSON<L, A>(JSON: RemoteJSON<L, A>): RemoteData<L, A> {
+  switch (JSON._tag) {
+    case 'RemoteInitial':
+      return initial;
+    case 'RemotePending':
+      return pending;
+    case 'RemoteFailure':
+      return failure<L, A>(JSON.error);
+    case 'RemoteRefresh':
+      return refresh<L, A>(JSON.value);
+    case 'RemoteSuccess':
+      return success<L, A>(JSON.value);
+  }
 }
 
 //instance
