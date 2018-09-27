@@ -1,6 +1,6 @@
 {
   "name": "@cala/remote-data",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "main": "dist/remote-data.js",
   "typings": "dist/remote-data.d.ts",
   "files": [
