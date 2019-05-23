@@ -1,6 +1,13 @@
 import test from 'ava';
 
-import { combine, pending, failure, success, refresh, initial } from '../remote-data';
+import {
+  combine,
+  pending,
+  failure,
+  success,
+  refresh,
+  initial
+} from '../remote-data';
 
 test('initial', t => {
   t.is(combine(initial, initial), initial);
@@ -25,7 +32,13 @@ test('success', t => {
 });
 
 test('combines arbitrary values to first initial', t => {
-  const values = [success(123), success('foo'), failure('bar'), pending, initial];
+  const values = [
+    success(123),
+    success('foo'),
+    failure('bar'),
+    pending,
+    initial
+  ];
   t.is(combine.apply(null, values), initial);
   t.is(combine.apply(null, values.reverse()), initial);
 });

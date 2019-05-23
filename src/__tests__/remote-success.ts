@@ -3,7 +3,14 @@ import { some } from 'fp-ts/lib/Option';
 import { setoidNumber } from 'fp-ts/lib/Setoid';
 import { TestContext } from './fixtures';
 
-import { failure, initial, pending, refresh, success, RemoteData } from '../remote-data';
+import {
+  failure,
+  initial,
+  pending,
+  refresh,
+  success,
+  RemoteData
+} from '../remote-data';
 const test = anyTest as TestInterface<TestContext>;
 
 test.beforeEach(t => {

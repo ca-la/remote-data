@@ -1,6 +1,13 @@
 import test from 'ava';
 
-import { fromJSON, failure, initial, pending, refresh, success } from '../remote-data';
+import {
+  fromJSON,
+  failure,
+  initial,
+  pending,
+  refresh,
+  success
+} from '../remote-data';
 
 test('initial', t => {
   t.deepEqual(fromJSON(initial.toJSON()), initial);

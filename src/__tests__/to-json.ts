@@ -3,11 +3,17 @@ import test from 'ava';
 import { failure, initial, pending, refresh, success } from '../remote-data';
 
 test('initial', t => {
-  t.deepEqual(initial.toJSON(), { _URI: '@cala/remote-data', _tag: 'RemoteInitial' });
+  t.deepEqual(initial.toJSON(), {
+    _URI: '@cala/remote-data',
+    _tag: 'RemoteInitial'
+  });
 });
 
 test('pending', t => {
-  t.deepEqual(pending.toJSON(), { _URI: '@cala/remote-data', _tag: 'RemotePending' });
+  t.deepEqual(pending.toJSON(), {
+    _URI: '@cala/remote-data',
+    _tag: 'RemotePending'
+  });
 });
 
 test('failure', t => {
@@ -27,5 +33,9 @@ test('refresh', t => {
 });
 
 test('success', t => {
-  t.deepEqual(success(1).toJSON(), { _URI: '@cala/remote-data', _tag: 'RemoteSuccess', value: 1 });
+  t.deepEqual(success(1).toJSON(), {
+    _URI: '@cala/remote-data',
+    _tag: 'RemoteSuccess',
+    value: 1
+  });
 });

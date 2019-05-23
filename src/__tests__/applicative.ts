@@ -3,7 +3,14 @@ import { TestContext } from './fixtures';
 import { array } from 'fp-ts/lib/Array';
 import { sequence } from 'fp-ts/lib/Traversable';
 
-import { pending, failure, success, refresh, remoteData, initial } from '../remote-data';
+import {
+  pending,
+  failure,
+  success,
+  refresh,
+  remoteData,
+  initial
+} from '../remote-data';
 
 const test = anyTest as TestInterface<TestContext>;
 const s = sequence(remoteData, array);

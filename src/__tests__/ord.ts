@@ -1,7 +1,14 @@
 import anyTest, { TestInterface } from 'ava';
 import { TestContext } from './fixtures';
 
-import { pending, failure, success, refresh, initial, getOrd } from '../remote-data';
+import {
+  pending,
+  failure,
+  success,
+  refresh,
+  initial,
+  getOrd
+} from '../remote-data';
 import { ordString, ordNumber } from 'fp-ts/lib/Ord';
 
 const test = anyTest as TestInterface<TestContext>;

@@ -3,7 +3,14 @@ import { option, some, none } from 'fp-ts/lib/Option';
 import { traverse } from 'fp-ts/lib/Traversable';
 import { TestContext } from './fixtures';
 
-import { pending, failure, success, refresh, initial, remoteData } from '../remote-data';
+import {
+  pending,
+  failure,
+  success,
+  refresh,
+  initial,
+  remoteData
+} from '../remote-data';
 
 const test = anyTest as TestInterface<TestContext>;
 const tOptionRemoteData = traverse(option, remoteData);
