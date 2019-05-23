@@ -2,7 +2,14 @@ import anyTest, { TestInterface } from 'ava';
 import { compose } from 'fp-ts/lib/function';
 import { TestContext } from './fixtures';
 
-import { pending, failure, success, refresh, RemoteData, initial } from '../remote-data';
+import {
+  pending,
+  failure,
+  success,
+  refresh,
+  RemoteData,
+  initial
+} from '../remote-data';
 
 const test = anyTest as TestInterface<TestContext>;
 const double = (x: number) => x * 2;

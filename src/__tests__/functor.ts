@@ -1,7 +1,14 @@
 import test from 'ava';
 import { identity, compose } from 'fp-ts/lib/function';
 
-import { pending, failure, success, refresh, RemoteData, initial } from '../remote-data';
+import {
+  pending,
+  failure,
+  success,
+  refresh,
+  RemoteData,
+  initial
+} from '../remote-data';
 
 const double = (x: number) => x * 2;
 const quad = compose(
