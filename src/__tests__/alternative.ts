@@ -1,7 +1,7 @@
-import test from 'ava';
+import test from "ava";
 
-import { initial, remoteData } from '../remote-data';
+import { initial, remoteData } from "../remote-data";
 
-test('zero', t => {
+test("zero", (t) => {
   t.is(remoteData.zero(), initial);
 });

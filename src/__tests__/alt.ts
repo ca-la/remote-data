@@ -1,21 +1,21 @@
-import anyTest, { TestInterface } from 'ava';
-import { TestContext } from './fixtures';
+import anyTest, { TestInterface } from "ava";
+import { TestContext } from "./fixtures";
 
-import { pending, failure, success, refresh, initial } from '../remote-data';
+import { pending, failure, success, refresh, initial } from "../remote-data";
 
 const test = anyTest as TestInterface<TestContext>;
 
-test.beforeEach(t => {
+test.beforeEach((t) => {
   t.context = {
     initialRD: initial,
     pendingRD: pending,
     refreshRD: refresh(-1),
     successRD: success(1),
-    failureRD: failure('foo')
+    failureRD: failure("foo"),
   };
 });
 
-test('initial', t => {
+test("initial", (t) => {
   const { initialRD, pendingRD, failureRD, refreshRD, successRD } = t.context;
 
   t.is(initialRD.alt(initialRD), initialRD);
@@ -25,7 +25,7 @@ test('initial', t => {
   t.is(initialRD.alt(successRD), successRD);
 });
 
-test('pending', t => {
+test("pending", (t) => {
   const { initialRD, pendingRD, failureRD, refreshRD, successRD } = t.context;
 
   t.is(pendingRD.alt(initialRD), initialRD);
@@ -35,7 +35,7 @@ test('pending', t => {
   t.is(pendingRD.alt(successRD), successRD);
 });
 
-test('failure', t => {
+test("failure", (t) => {
   const { initialRD, pendingRD, failureRD, refreshRD, successRD } = t.context;
 
   t.is(failureRD.alt(pendingRD), pendingRD);
@@ -45,7 +45,7 @@ test('failure', t => {
   t.is(failureRD.alt(successRD), successRD);
 });
 
-test('refresh', t => {
+test("refresh", (t) => {
   const { initialRD, pendingRD, failureRD, refreshRD, successRD } = t.context;
 
   t.is(refreshRD.alt(pendingRD), refreshRD);
@@ -55,7 +55,7 @@ test('refresh', t => {
   t.is(refreshRD.alt(successRD), successRD);
 });
 
-test('success', t => {
+test("success", (t) => {
   const { initialRD, pendingRD, failureRD, refreshRD, successRD } = t.context;
 
   t.is(successRD.alt(pendingRD), successRD);

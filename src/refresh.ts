@@ -1,6 +1,12 @@
-import { Lazy, Function1, Function2, Predicate, toString } from 'fp-ts/lib/function';
-import { some, Option } from 'fp-ts/lib/Option';
-import { Setoid } from 'fp-ts/lib/Setoid';
+import {
+  Lazy,
+  Function1,
+  Function2,
+  Predicate,
+  toString,
+} from "fp-ts/lib/function";
+import { some, Option } from "fp-ts/lib/Option";
+import { Setoid } from "fp-ts/lib/Setoid";
 import {
   refresh,
   initial,
@@ -13,11 +19,11 @@ import {
   URI,
   IRemoteData,
   RemoteData,
-  RemoteJSON
-} from './remote-data';
+  RemoteJSON,
+} from "./remote-data";
 
 export class RemoteRefresh<L, A> implements IRemoteData<L, A> {
-  readonly _tag: 'RemoteRefresh' = 'RemoteRefresh';
+  readonly _tag: "RemoteRefresh" = "RemoteRefresh";
   // prettier-ignore
   readonly '_URI': URI;
   // prettier-ignore
@@ -28,11 +34,23 @@ export class RemoteRefresh<L, A> implements IRemoteData<L, A> {
   constructor(readonly value: A) {}
 
   alt(fy: RemoteData<L, A>): RemoteData<L, A> {
-    return fy.fold(this, this, () => this, () => this, () => fy);
+    return fy.fold(
+      this,
+      this,
+      () => this,
+      () => this,
+      () => fy
+    );
   }
 
   altL(fy: Lazy<RemoteData<L, A>>): RemoteData<L, A> {
-    return fy().fold(this, this, () => this, () => this, () => fy());
+    return fy().fold(
+      this,
+      this,
+      () => this,
+      () => this,
+      () => fy()
+    );
   }
 
   ap<B>(fab: RemoteData<L, Function1<A, B>>): RemoteData<L, B> {
@@ -40,8 +58,8 @@ export class RemoteRefresh<L, A> implements IRemoteData<L, A> {
       initial,
       pending,
       () => fab as any,
-      value => this.map(value),
-      value => this.map(value)
+      (value) => this.map(value),
+      (value) => this.map(value)
     );
   }
 
@@ -133,7 +151,7 @@ export class RemoteRefresh<L, A> implements IRemoteData<L, A> {
     return {
       _URI: URI,
       _tag: this._tag,
-      value: this.value
+      value: this.value,
     };
   }
 

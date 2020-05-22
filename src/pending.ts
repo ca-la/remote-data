@@ -1,6 +1,6 @@
-import { Lazy, Function1, Function2, Predicate } from 'fp-ts/lib/function';
-import { none, Option } from 'fp-ts/lib/Option';
-import { Setoid } from 'fp-ts/lib/Setoid';
+import { Lazy, Function1, Function2, Predicate } from "fp-ts/lib/function";
+import { none, Option } from "fp-ts/lib/Option";
+import { Setoid } from "fp-ts/lib/Setoid";
 import {
   pending,
   initial,
@@ -12,11 +12,11 @@ import {
   URI,
   IRemoteData,
   RemoteData,
-  RemoteJSON
-} from './remote-data';
+  RemoteJSON,
+} from "./remote-data";
 
 export class RemotePending<L, A> implements IRemoteData<L, A> {
-  readonly _tag: 'RemotePending' = 'RemotePending';
+  readonly _tag: "RemotePending" = "RemotePending";
   // prettier-ignore
   readonly '_URI': URI;
   // prettier-ignore
@@ -33,7 +33,13 @@ export class RemotePending<L, A> implements IRemoteData<L, A> {
   }
 
   ap<B>(fab: RemoteData<L, Function1<A, B>>): RemoteData<L, B> {
-    return fab.fold(initial, pending as any, () => pending, () => pending, () => pending);
+    return fab.fold(
+      initial,
+      pending as any,
+      () => pending,
+      () => pending,
+      () => pending
+    );
   }
 
   chain<B>(f: Function1<A, RemoteData<L, B>>): RemoteData<L, B> {
@@ -117,13 +123,13 @@ export class RemotePending<L, A> implements IRemoteData<L, A> {
   }
 
   toString(): string {
-    return 'pending';
+    return "pending";
   }
 
   toJSON(): RemoteJSON<L, A> {
     return {
       _URI: URI,
-      _tag: this._tag
+      _tag: this._tag,
     };
   }
 

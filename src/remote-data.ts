@@ -1,56 +1,62 @@
-import { constFalse, Function2, Function1, Lazy, Predicate } from 'fp-ts/lib/function';
-import { Monad2 } from 'fp-ts/lib/Monad';
-import { Foldable2 } from 'fp-ts/lib/Foldable';
-import { Alt2 } from 'fp-ts/lib/Alt';
-import { Extend2 } from 'fp-ts/lib/Extend';
-import { sequence, Traversable2 } from 'fp-ts/lib/Traversable';
-import { isNone, Option } from 'fp-ts/lib/Option';
-import { Either, isLeft } from 'fp-ts/lib/Either';
-import { Setoid } from 'fp-ts/lib/Setoid';
+import {
+  constFalse,
+  Function2,
+  Function1,
+  Lazy,
+  Predicate,
+} from "fp-ts/lib/function";
+import { Monad2 } from "fp-ts/lib/Monad";
+import { Foldable2 } from "fp-ts/lib/Foldable";
+import { Alt2 } from "fp-ts/lib/Alt";
+import { Extend2 } from "fp-ts/lib/Extend";
+import { sequence, Traversable2 } from "fp-ts/lib/Traversable";
+import { isNone, Option } from "fp-ts/lib/Option";
+import { Either, isLeft } from "fp-ts/lib/Either";
+import { Setoid } from "fp-ts/lib/Setoid";
 
-import { array } from 'fp-ts/lib/Array';
+import { array } from "fp-ts/lib/Array";
 
-import { HKT, HKT2, Type, Type2, URIS, URIS2 } from 'fp-ts/lib/HKT';
-import { Applicative } from 'fp-ts/lib/Applicative';
-import { Alternative2 } from 'fp-ts/lib/Alternative';
-import { Ord } from 'fp-ts/lib/Ord';
-import { sign } from 'fp-ts/lib/Ordering';
-import { Semigroup } from 'fp-ts/lib/Semigroup';
-import { Monoid } from 'fp-ts/lib/Monoid';
-import { Monoidal2 } from 'fp-ts/lib/Monoidal';
+import { HKT, HKT2, Type, Type2, URIS, URIS2 } from "fp-ts/lib/HKT";
+import { Applicative } from "fp-ts/lib/Applicative";
+import { Alternative2 } from "fp-ts/lib/Alternative";
+import { Ord } from "fp-ts/lib/Ord";
+import { sign } from "fp-ts/lib/Ordering";
+import { Semigroup } from "fp-ts/lib/Semigroup";
+import { Monoid } from "fp-ts/lib/Monoid";
+import { Monoidal2 } from "fp-ts/lib/Monoidal";
 
-import { RemoteInitial } from './initial';
-export { RemoteInitial } from './initial';
-import { RemoteFailure } from './failure';
-export { RemoteFailure } from './failure';
-import { RemoteRefresh } from './refresh';
-export { RemoteRefresh } from './refresh';
-import { RemoteSuccess } from './success';
-export { RemoteSuccess } from './success';
-import { RemotePending } from './pending';
-export { RemotePending } from './pending';
+import { RemoteInitial } from "./initial";
+export { RemoteInitial } from "./initial";
+import { RemoteFailure } from "./failure";
+export { RemoteFailure } from "./failure";
+import { RemoteRefresh } from "./refresh";
+export { RemoteRefresh } from "./refresh";
+import { RemoteSuccess } from "./success";
+export { RemoteSuccess } from "./success";
+import { RemotePending } from "./pending";
+export { RemotePending } from "./pending";
 
-export const URI = '@cala/remote-data';
+export const URI = "@cala/remote-data";
 export type URI = typeof URI;
-declare module 'fp-ts/lib/HKT' {
+declare module "fp-ts/lib/HKT" {
   interface URI2HKT2<L, A> {
-    '@cala/remote-data': RemoteData<L, A>;
+    "@cala/remote-data": RemoteData<L, A>;
   }
 }
 
 type RemoteTag =
-  | 'RemoteInitial'
-  | 'RemotePending'
-  | 'RemoteFailure'
-  | 'RemoteRefresh'
-  | 'RemoteSuccess';
+  | "RemoteInitial"
+  | "RemotePending"
+  | "RemoteFailure"
+  | "RemoteRefresh"
+  | "RemoteSuccess";
 
 export type RemoteJSON<L, A> =
-  | { _URI: URI; _tag: 'RemoteInitial' }
-  | { _URI: URI; _tag: 'RemotePending' }
-  | { _URI: URI; _tag: 'RemoteFailure'; error: L }
-  | { _URI: URI; _tag: 'RemoteRefresh'; value: A }
-  | { _URI: URI; _tag: 'RemoteSuccess'; value: A };
+  | { _URI: URI; _tag: "RemoteInitial" }
+  | { _URI: URI; _tag: "RemotePending" }
+  | { _URI: URI; _tag: "RemoteFailure"; error: L }
+  | { _URI: URI; _tag: "RemoteRefresh"; value: A }
+  | { _URI: URI; _tag: "RemoteSuccess"; value: A };
 
 export interface IRemoteData<L, A> {
   readonly _tag: RemoteTag;
@@ -361,31 +367,53 @@ export type RemoteData<L, A> =
   | RemotePending<L, A>;
 
 //Monad
-export const of = <L, A>(value: A): RemoteSuccess<L, A> => new RemoteSuccess(value);
-const ap = <L, A, B>(fab: RemoteData<L, Function1<A, B>>, fa: RemoteData<L, A>): RemoteData<L, B> =>
-  fa.ap(fab);
-const map = <L, A, B>(fa: RemoteData<L, A>, f: Function1<A, B>): RemoteData<L, B> => fa.map(f);
+export const of = <L, A>(value: A): RemoteSuccess<L, A> =>
+  new RemoteSuccess(value);
+const ap = <L, A, B>(
+  fab: RemoteData<L, Function1<A, B>>,
+  fa: RemoteData<L, A>
+): RemoteData<L, B> => fa.ap(fab);
+const map = <L, A, B>(
+  fa: RemoteData<L, A>,
+  f: Function1<A, B>
+): RemoteData<L, B> => fa.map(f);
 const chain = <L, A, B>(
   fa: RemoteData<L, A>,
   f: Function1<A, RemoteData<L, B>>
 ): RemoteData<L, B> => fa.chain(f);
 
 //Foldable
-const reduce = <L, A, B>(fa: RemoteData<L, A>, b: B, f: Function2<B, A, B>): B => fa.reduce(f, b);
+const reduce = <L, A, B>(
+  fa: RemoteData<L, A>,
+  b: B,
+  f: Function2<B, A, B>
+): B => fa.reduce(f, b);
 
 //Traversable
 function traverse<F extends URIS2>(
   F: Applicative<F>
-): <L, A, B>(ta: RemoteData<L, A>, f: Function1<A, HKT2<F, L, B>>) => Type2<F, L, RemoteData<L, B>>;
+): <L, A, B>(
+  ta: RemoteData<L, A>,
+  f: Function1<A, HKT2<F, L, B>>
+) => Type2<F, L, RemoteData<L, B>>;
 function traverse<F extends URIS>(
   F: Applicative<F>
-): <L, A, B>(ta: RemoteData<L, A>, f: Function1<A, HKT<F, B>>) => Type<F, RemoteData<L, B>>;
+): <L, A, B>(
+  ta: RemoteData<L, A>,
+  f: Function1<A, HKT<F, B>>
+) => Type<F, RemoteData<L, B>>;
 function traverse<F>(
   F: Applicative<F>
-): <L, A, B>(ta: RemoteData<L, A>, f: Function1<A, HKT<F, B>>) => HKT<F, RemoteData<L, B>>;
+): <L, A, B>(
+  ta: RemoteData<L, A>,
+  f: Function1<A, HKT<F, B>>
+) => HKT<F, RemoteData<L, B>>;
 function traverse<F>(
   F: Applicative<F>
-): <L, A, B>(ta: RemoteData<L, A>, f: Function1<A, HKT<F, B>>) => HKT<F, RemoteData<L, B>> {
+): <L, A, B>(
+  ta: RemoteData<L, A>,
+  f: Function1<A, HKT<F, B>>
+) => HKT<F, RemoteData<L, B>> {
   return (ta, f) => {
     if (ta.isSuccess()) {
       return F.map(f(ta.value), of);
@@ -398,7 +426,10 @@ function traverse<F>(
 }
 
 //Alt
-const alt = <L, A>(fx: RemoteData<L, A>, fy: RemoteData<L, A>): RemoteData<L, A> => fx.alt(fy);
+const alt = <L, A>(
+  fx: RemoteData<L, A>,
+  fy: RemoteData<L, A>
+): RemoteData<L, A> => fx.alt(fy);
 
 //Extend
 const extend = <L, A, B>(
@@ -407,64 +438,82 @@ const extend = <L, A, B>(
 ): RemoteData<L, B> => fla.extend(f);
 
 //constructors
-export const failure = <L, A>(error: L): RemoteFailure<L, A> => new RemoteFailure(error);
-export const refresh = <L, A>(stale: A): RemoteRefresh<L, A> => new RemoteRefresh(stale);
+export const failure = <L, A>(error: L): RemoteFailure<L, A> =>
+  new RemoteFailure(error);
+export const refresh = <L, A>(stale: A): RemoteRefresh<L, A> =>
+  new RemoteRefresh(stale);
 export const success: <L, A>(value: A) => RemoteSuccess<L, A> = of;
-export const pending: RemotePending<never, never> = new RemotePending<never, never>();
-export const initial: RemoteInitial<never, never> = new RemoteInitial<never, never>();
+export const pending: RemotePending<never, never> = new RemotePending<
+  never,
+  never
+>();
+export const initial: RemoteInitial<never, never> = new RemoteInitial<
+  never,
+  never
+>();
 
 //Alternative
 const zero = <L, A>(): RemoteData<L, A> => initial;
 
 //filters
-export const isFailure = <L, A>(data: RemoteData<L, A>): data is RemoteFailure<L, A> =>
-  data.isFailure();
-export const isRefresh = <L, A>(data: RemoteData<L, A>): data is RemoteRefresh<L, A> =>
-  data.isRefresh();
-export const isSuccess = <L, A>(data: RemoteData<L, A>): data is RemoteSuccess<L, A> =>
-  data.isSuccess();
-export const isPending = <L, A>(data: RemoteData<L, A>): data is RemotePending<L, A> =>
-  data.isPending();
-export const isInitial = <L, A>(data: RemoteData<L, A>): data is RemoteInitial<L, A> =>
-  data.isInitial();
+export const isFailure = <L, A>(
+  data: RemoteData<L, A>
+): data is RemoteFailure<L, A> => data.isFailure();
+export const isRefresh = <L, A>(
+  data: RemoteData<L, A>
+): data is RemoteRefresh<L, A> => data.isRefresh();
+export const isSuccess = <L, A>(
+  data: RemoteData<L, A>
+): data is RemoteSuccess<L, A> => data.isSuccess();
+export const isPending = <L, A>(
+  data: RemoteData<L, A>
+): data is RemotePending<L, A> => data.isPending();
+export const isInitial = <L, A>(
+  data: RemoteData<L, A>
+): data is RemoteInitial<L, A> => data.isInitial();
 
 //Monoidal
 const unit = <L, A>(): RemoteData<L, A> => initial;
-const mult = <L, A, B>(fa: RemoteData<L, A>, fb: RemoteData<L, B>): RemoteData<L, [A, B]> =>
-  combine(fa, fb);
+const mult = <L, A, B>(
+  fa: RemoteData<L, A>,
+  fb: RemoteData<L, B>
+): RemoteData<L, [A, B]> => combine(fa, fb);
 
 //Setoid
-export const getSetoid = <L, A>(SL: Setoid<L>, SA: Setoid<A>): Setoid<RemoteData<L, A>> => {
+export const getSetoid = <L, A>(
+  SL: Setoid<L>,
+  SA: Setoid<A>
+): Setoid<RemoteData<L, A>> => {
   return {
     equals: (x, y) =>
       x.foldL(
         () => y.isInitial(),
         () => y.isPending(),
-        xError =>
+        (xError) =>
           y.foldL(
             constFalse,
             constFalse,
-            yError => SL.equals(xError, yError),
+            (yError) => SL.equals(xError, yError),
             constFalse,
             constFalse
           ),
-        ax =>
+        (ax) =>
           y.foldL(
             constFalse,
             constFalse,
             constFalse,
-            ay => SA.equals(ax, ay),
-            ay => SA.equals(ax, ay)
+            (ay) => SA.equals(ax, ay),
+            (ay) => SA.equals(ax, ay)
           ),
-        ax =>
+        (ax) =>
           y.foldL(
             constFalse,
             constFalse,
             constFalse,
-            ay => SA.equals(ax, ay),
-            ay => SA.equals(ax, ay)
+            (ay) => SA.equals(ax, ay),
+            (ay) => SA.equals(ax, ay)
           )
-      )
+      ),
   };
 };
 
@@ -475,27 +524,48 @@ export const getOrd = <L, A>(OL: Ord<L>, OA: Ord<A>): Ord<RemoteData<L, A>> => {
     compare: (x, y) =>
       sign(
         x.foldL(
-          () => y.fold(0, -1, () => -1, () => -1, () => -1),
-          () => y.fold(1, 0, () => -1, () => -1, () => -1),
-          xError => y.fold(1, 1, yError => OL.compare(xError, yError), () => -1, () => -1),
-          xValue =>
+          () =>
             y.fold(
-              1,
-              1,
-              () => 1,
-              yValue => OA.compare(xValue, yValue),
-              yValue => OA.compare(xValue, yValue)
+              0,
+              -1,
+              () => -1,
+              () => -1,
+              () => -1
             ),
-          xValue =>
+          () =>
+            y.fold(
+              1,
+              0,
+              () => -1,
+              () => -1,
+              () => -1
+            ),
+          (xError) =>
+            y.fold(
+              1,
+              1,
+              (yError) => OL.compare(xError, yError),
+              () => -1,
+              () => -1
+            ),
+          (xValue) =>
             y.fold(
               1,
               1,
               () => 1,
-              yValue => OA.compare(xValue, yValue),
-              yValue => OA.compare(xValue, yValue)
+              (yValue) => OA.compare(xValue, yValue),
+              (yValue) => OA.compare(xValue, yValue)
+            ),
+          (xValue) =>
+            y.fold(
+              1,
+              1,
+              () => 1,
+              (yValue) => OA.compare(xValue, yValue),
+              (yValue) => OA.compare(xValue, yValue)
             )
         )
-      )
+      ),
   };
 };
 
@@ -507,39 +577,66 @@ export const getSemigroup = <L, A>(
   return {
     concat: (x, y) => {
       return x.foldL(
-        () => y.fold(y, y, () => y, () => y, () => y),
-        () => y.fold(x, y, () => y, () => y, () => y),
-        xError => y.fold(x, x, yError => failure(SL.concat(xError, yError)), () => y, () => y),
-        xStale =>
+        () =>
           y.fold(
-            x,
-            x,
-            () => x,
-            yStale => refresh(SA.concat(xStale, yStale)),
-            yValue => refresh(SA.concat(xStale, yValue))
+            y,
+            y,
+            () => y,
+            () => y,
+            () => y
           ),
-        xValue =>
+        () =>
+          y.fold(
+            x,
+            y,
+            () => y,
+            () => y,
+            () => y
+          ),
+        (xError) =>
+          y.fold(
+            x,
+            x,
+            (yError) => failure(SL.concat(xError, yError)),
+            () => y,
+            () => y
+          ),
+        (xStale) =>
           y.fold(
             x,
             x,
             () => x,
-            yStale => refresh(SA.concat(xValue, yStale)),
-            yValue => success(SA.concat(xValue, yValue))
+            (yStale) => refresh(SA.concat(xStale, yStale)),
+            (yValue) => refresh(SA.concat(xStale, yValue))
+          ),
+        (xValue) =>
+          y.fold(
+            x,
+            x,
+            () => x,
+            (yStale) => refresh(SA.concat(xValue, yStale)),
+            (yValue) => success(SA.concat(xValue, yValue))
           )
       );
-    }
+    },
   };
 };
 
 //Monoid
-export const getMonoid = <L, A>(ML: Monoid<L>, MA: Monoid<A>): Monoid<RemoteData<L, A>> => {
+export const getMonoid = <L, A>(
+  ML: Monoid<L>,
+  MA: Monoid<A>
+): Monoid<RemoteData<L, A>> => {
   return {
     ...getSemigroup(ML, MA),
-    empty: initial
+    empty: initial,
   };
 };
 
-export function fromOption<L, A>(option: Option<A>, error: Lazy<L>): RemoteData<L, A> {
+export function fromOption<L, A>(
+  option: Option<A>,
+  error: Lazy<L>
+): RemoteData<L, A> {
   if (isNone(option)) {
     return failure(error());
   } else {
@@ -559,20 +656,20 @@ export function fromPredicate<L, A>(
   predicate: Predicate<A>,
   whenFalse: Function1<A, L>
 ): Function1<A, RemoteData<L, A>> {
-  return a => (predicate(a) ? success(a) : failure(whenFalse(a)));
+  return (a) => (predicate(a) ? success(a) : failure(whenFalse(a)));
 }
 
 export function fromJSON<L, A>(JSON: RemoteJSON<L, A>): RemoteData<L, A> {
   switch (JSON._tag) {
-    case 'RemoteInitial':
+    case "RemoteInitial":
       return initial;
-    case 'RemotePending':
+    case "RemotePending":
       return pending;
-    case 'RemoteFailure':
+    case "RemoteFailure":
       return failure<L, A>(JSON.error);
-    case 'RemoteRefresh':
+    case "RemoteRefresh":
       return refresh<L, A>(JSON.value);
-    case 'RemoteSuccess':
+    case "RemoteSuccess":
       return success<L, A>(JSON.value);
   }
 }
@@ -611,11 +708,14 @@ export const remoteData: Monad2<URI> &
 
   //Monoidal
   unit,
-  mult
+  mult,
 };
 
 export function combine<A, L>(a: RemoteData<L, A>): RemoteData<L, [A]>;
-export function combine<A, B, L>(a: RemoteData<L, A>, b: RemoteData<L, B>): RemoteData<L, [A, B]>;
+export function combine<A, B, L>(
+  a: RemoteData<L, A>,
+  b: RemoteData<L, B>
+): RemoteData<L, [A, B]>;
 export function combine<A, B, C, L>(
   a: RemoteData<L, A>,
   b: RemoteData<L, B>,

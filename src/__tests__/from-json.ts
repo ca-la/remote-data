@@ -1,4 +1,4 @@
-import test from 'ava';
+import test from "ava";
 
 import {
   fromJSON,
@@ -6,48 +6,48 @@ import {
   initial,
   pending,
   refresh,
-  success
-} from '../remote-data';
+  success,
+} from "../remote-data";
 
-test('initial', t => {
+test("initial", (t) => {
   t.deepEqual(
-    fromJSON({ _URI: '@cala/remote-data', _tag: 'RemoteInitial' }),
+    fromJSON({ _URI: "@cala/remote-data", _tag: "RemoteInitial" }),
     initial
   );
 });
 
-test('pending', t => {
+test("pending", (t) => {
   t.deepEqual(
-    fromJSON({ _URI: '@cala/remote-data', _tag: 'RemotePending' }),
+    fromJSON({ _URI: "@cala/remote-data", _tag: "RemotePending" }),
     pending
   );
 });
 
-test('failure', t => {
+test("failure", (t) => {
   t.deepEqual(
     fromJSON({
-      _URI: '@cala/remote-data',
-      _tag: 'RemoteFailure',
-      error: 'foo'
+      _URI: "@cala/remote-data",
+      _tag: "RemoteFailure",
+      error: "foo",
     }),
-    failure('foo')
+    failure("foo")
   );
 });
 
-test('refresh', t => {
+test("refresh", (t) => {
   t.deepEqual(
     fromJSON({
-      _URI: '@cala/remote-data',
-      _tag: 'RemoteRefresh',
-      value: -1
+      _URI: "@cala/remote-data",
+      _tag: "RemoteRefresh",
+      value: -1,
     }),
     refresh(-1)
   );
 });
 
-test('success', t => {
+test("success", (t) => {
   t.deepEqual(
-    fromJSON({ _URI: '@cala/remote-data', _tag: 'RemoteSuccess', value: 1 }),
+    fromJSON({ _URI: "@cala/remote-data", _tag: "RemoteSuccess", value: 1 }),
     success(1)
   );
 });

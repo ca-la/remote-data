@@ -1,6 +1,6 @@
-import { Lazy, Function1, Function2, Predicate } from 'fp-ts/lib/function';
-import { none, Option } from 'fp-ts/lib/Option';
-import { Setoid } from 'fp-ts/lib/Setoid';
+import { Lazy, Function1, Function2, Predicate } from "fp-ts/lib/function";
+import { none, Option } from "fp-ts/lib/Option";
+import { Setoid } from "fp-ts/lib/Setoid";
 import {
   initial,
   RemotePending,
@@ -11,11 +11,11 @@ import {
   URI,
   IRemoteData,
   RemoteData,
-  RemoteJSON
-} from './remote-data';
+  RemoteJSON,
+} from "./remote-data";
 
 export class RemoteInitial<L, A> implements IRemoteData<L, A> {
-  readonly _tag: 'RemoteInitial' = 'RemoteInitial';
+  readonly _tag: "RemoteInitial" = "RemoteInitial";
   // prettier-ignore
   readonly '_URI': URI;
   // prettier-ignore
@@ -116,13 +116,13 @@ export class RemoteInitial<L, A> implements IRemoteData<L, A> {
   }
 
   toString(): string {
-    return 'initial';
+    return "initial";
   }
 
   toJSON(): RemoteJSON<L, A> {
     return {
       _URI: URI,
-      _tag: this._tag
+      _tag: this._tag,
     };
   }
 

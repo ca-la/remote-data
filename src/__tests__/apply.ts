@@ -1,6 +1,6 @@
-import anyTest, { TestInterface } from 'ava';
-import { compose } from 'fp-ts/lib/function';
-import { TestContext } from './fixtures';
+import anyTest, { TestInterface } from "ava";
+import { compose } from "fp-ts/lib/function";
+import { TestContext } from "./fixtures";
 
 import {
   pending,
@@ -8,30 +8,27 @@ import {
   success,
   refresh,
   RemoteData,
-  initial
-} from '../remote-data';
+  initial,
+} from "../remote-data";
 
 const test = anyTest as TestInterface<TestContext>;
 const double = (x: number) => x * 2;
-const quad = compose(
-  double,
-  double
-);
+const quad = compose(double, double);
 const f: RemoteData<string, (a: number) => number> = success(double);
 const r: RemoteData<string, (a: number) => number> = refresh(quad);
-const failedF: RemoteData<string, (a: number) => number> = failure('foo');
+const failedF: RemoteData<string, (a: number) => number> = failure("foo");
 
-test.beforeEach(t => {
+test.beforeEach((t) => {
   t.context = {
     initialRD: initial,
     pendingRD: pending,
     refreshRD: refresh(-1),
     successRD: success(1),
-    failureRD: failure('foo')
+    failureRD: failure("foo"),
   };
 });
 
-test('initial', t => {
+test("initial", (t) => {
   const { initialRD } = t.context;
 
   t.is(initialRD.ap(initial), initialRD);
@@ -41,7 +38,7 @@ test('initial', t => {
   t.is(initialRD.ap(f), initialRD);
 });
 
-test('pending', t => {
+test("pending", (t) => {
   const { initialRD, pendingRD } = t.context;
 
   t.is(pendingRD.ap(initial), initialRD);
@@ -51,7 +48,7 @@ test('pending', t => {
   t.is(pendingRD.ap(f), pendingRD);
 });
 
-test('failure', t => {
+test("failure", (t) => {
   const { initialRD, pendingRD, failureRD } = t.context;
 
   t.is(failureRD.ap(initial), initialRD);
@@ -61,7 +58,7 @@ test('failure', t => {
   t.is(failureRD.ap(f), failureRD);
 });
 
-test('refresh', t => {
+test("refresh", (t) => {
   const { initialRD, pendingRD, refreshRD } = t.context;
 
   t.is(refreshRD.ap(initial), initialRD);
@@ -71,7 +68,7 @@ test('refresh', t => {
   t.deepEqual(refreshRD.ap(f), refresh(double(-1)));
 });
 
-test('success', t => {
+test("success", (t) => {
   const { initialRD, pendingRD, successRD } = t.context;
 
   t.is(successRD.ap(initial), initialRD);
