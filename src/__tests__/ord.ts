@@ -1,5 +1,5 @@
-import anyTest, { TestInterface } from 'ava';
-import { TestContext } from './fixtures';
+import anyTest, { TestInterface } from "ava";
+import { TestContext } from "./fixtures";
 
 import {
   pending,
@@ -7,24 +7,24 @@ import {
   success,
   refresh,
   initial,
-  getOrd
-} from '../remote-data';
-import { ordString, ordNumber } from 'fp-ts/lib/Ord';
+  getOrd,
+} from "../remote-data";
+import { ordString, ordNumber } from "fp-ts/lib/Ord";
 
 const test = anyTest as TestInterface<TestContext>;
 const compare = getOrd(ordString, ordNumber).compare;
 
-test.beforeEach(t => {
+test.beforeEach((t) => {
   t.context = {
     initialRD: initial,
     pendingRD: pending,
     refreshRD: refresh(-1),
     successRD: success(1),
-    failureRD: failure('foo')
+    failureRD: failure("foo"),
   };
 });
 
-test('initial', t => {
+test("initial", (t) => {
   const { initialRD, pendingRD, failureRD, refreshRD, successRD } = t.context;
 
   t.is(compare(initialRD, initialRD), 0);
@@ -34,7 +34,7 @@ test('initial', t => {
   t.is(compare(initialRD, successRD), -1);
 });
 
-test('pending', t => {
+test("pending", (t) => {
   const { initialRD, pendingRD, failureRD, refreshRD, successRD } = t.context;
 
   t.is(compare(pendingRD, initialRD), 1);
@@ -44,7 +44,7 @@ test('pending', t => {
   t.is(compare(pendingRD, successRD), -1);
 });
 
-test('failure', t => {
+test("failure", (t) => {
   const { initialRD, pendingRD, failureRD, refreshRD, successRD } = t.context;
 
   t.is(compare(failureRD, initialRD), 1);
@@ -52,11 +52,11 @@ test('failure', t => {
   t.is(compare(failureRD, failureRD), 0);
   t.is(compare(failureRD, refreshRD), -1);
   t.is(compare(failureRD, successRD), -1);
-  t.is(compare(failure('1'), failure('2')), -1);
-  t.is(compare(failure('2'), failure('1')), 1);
+  t.is(compare(failure("1"), failure("2")), -1);
+  t.is(compare(failure("2"), failure("1")), 1);
 });
 
-test('refresh', t => {
+test("refresh", (t) => {
   const { initialRD, pendingRD, failureRD, refreshRD, successRD } = t.context;
 
   t.is(compare(refreshRD, initialRD), 1);
@@ -68,7 +68,7 @@ test('refresh', t => {
   t.is(compare(refresh(2), refresh(1)), 1);
 });
 
-test('success', t => {
+test("success", (t) => {
   const { initialRD, pendingRD, failureRD, refreshRD, successRD } = t.context;
 
   t.is(compare(successRD, initialRD), 1);

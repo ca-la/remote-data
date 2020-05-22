@@ -1,7 +1,7 @@
-import anyTest, { TestInterface } from 'ava';
-import { semigroupString, semigroupSum } from 'fp-ts/lib/Semigroup';
+import anyTest, { TestInterface } from "ava";
+import { semigroupString, semigroupSum } from "fp-ts/lib/Semigroup";
 
-import { TestContext } from './fixtures';
+import { TestContext } from "./fixtures";
 
 import {
   pending,
@@ -9,23 +9,23 @@ import {
   success,
   refresh,
   initial,
-  getSemigroup
-} from '../remote-data';
+  getSemigroup,
+} from "../remote-data";
 
 const test = anyTest as TestInterface<TestContext>;
 const concat = getSemigroup(semigroupString, semigroupSum).concat;
 
-test.beforeEach(t => {
+test.beforeEach((t) => {
   t.context = {
     initialRD: initial,
     pendingRD: pending,
     refreshRD: refresh(-1),
     successRD: success(1),
-    failureRD: failure('foo')
+    failureRD: failure("foo"),
   };
 });
 
-test('initial', t => {
+test("initial", (t) => {
   const { initialRD, pendingRD, failureRD, refreshRD, successRD } = t.context;
 
   t.is(concat(initialRD, initialRD), initialRD);
@@ -35,7 +35,7 @@ test('initial', t => {
   t.is(concat(initialRD, successRD), successRD);
 });
 
-test('pending', t => {
+test("pending", (t) => {
   const { initialRD, pendingRD, failureRD, refreshRD, successRD } = t.context;
 
   t.is(concat(pendingRD, initialRD), pendingRD);
@@ -45,20 +45,20 @@ test('pending', t => {
   t.is(concat(pendingRD, successRD), successRD);
 });
 
-test('failure', t => {
+test("failure", (t) => {
   const { initialRD, pendingRD, failureRD, refreshRD, successRD } = t.context;
 
   t.is(concat(failureRD, initialRD), failureRD);
   t.is(concat(failureRD, pendingRD), failureRD);
   t.deepEqual(
-    concat(failure('foo'), failure('bar')),
-    failure(semigroupString.concat('foo', 'bar'))
+    concat(failure("foo"), failure("bar")),
+    failure(semigroupString.concat("foo", "bar"))
   );
   t.is(concat(failureRD, refreshRD), refreshRD);
   t.is(concat(failureRD, successRD), successRD);
 });
 
-test('refresh', t => {
+test("refresh", (t) => {
   const { initialRD, pendingRD, failureRD, refreshRD } = t.context;
 
   t.is(concat(refreshRD, initialRD), refreshRD);
@@ -74,7 +74,7 @@ test('refresh', t => {
   );
 });
 
-test('success', t => {
+test("success", (t) => {
   const { initialRD, pendingRD, failureRD, successRD } = t.context;
 
   t.is(concat(successRD, initialRD), successRD);

@@ -1,4 +1,4 @@
-import test from 'ava';
+import test from "ava";
 
 import {
   fromJSON,
@@ -6,25 +6,25 @@ import {
   initial,
   pending,
   refresh,
-  success
-} from '../remote-data';
+  success,
+} from "../remote-data";
 
-test('initial', t => {
+test("initial", (t) => {
   t.deepEqual(fromJSON(initial.toJSON()), initial);
 });
 
-test('pending', t => {
+test("pending", (t) => {
   t.deepEqual(fromJSON(pending.toJSON()), pending);
 });
 
-test('failure', t => {
-  t.deepEqual(fromJSON(failure('foo').toJSON()), failure('foo'));
+test("failure", (t) => {
+  t.deepEqual(fromJSON(failure("foo").toJSON()), failure("foo"));
 });
 
-test('refresh', t => {
+test("refresh", (t) => {
   t.deepEqual(fromJSON(refresh(-1).toJSON()), refresh(-1));
 });
 
-test('success', t => {
+test("success", (t) => {
   t.deepEqual(fromJSON(success(1).toJSON()), success(1));
 });

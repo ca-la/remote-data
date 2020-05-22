@@ -1,6 +1,12 @@
-import { Lazy, Function1, Function2, Predicate, toString } from 'fp-ts/lib/function';
-import { none, Option } from 'fp-ts/lib/Option';
-import { Setoid } from 'fp-ts/lib/Setoid';
+import {
+  Lazy,
+  Function1,
+  Function2,
+  Predicate,
+  toString,
+} from "fp-ts/lib/function";
+import { none, Option } from "fp-ts/lib/Option";
+import { Setoid } from "fp-ts/lib/Setoid";
 import {
   failure,
   pending,
@@ -13,11 +19,11 @@ import {
   URI,
   IRemoteData,
   RemoteData,
-  RemoteJSON
-} from './remote-data';
+  RemoteJSON,
+} from "./remote-data";
 
 export class RemoteFailure<L, A> implements IRemoteData<L, A> {
-  readonly _tag: 'RemoteFailure' = 'RemoteFailure';
+  readonly _tag: "RemoteFailure" = "RemoteFailure";
   // prettier-ignore
   readonly '_URI': URI;
   // prettier-ignore
@@ -36,7 +42,13 @@ export class RemoteFailure<L, A> implements IRemoteData<L, A> {
   }
 
   ap<B>(fab: RemoteData<L, Function1<A, B>>): RemoteData<L, B> {
-    return fab.fold(initial, pending, () => fab as any, () => this, () => this);
+    return fab.fold(
+      initial,
+      pending,
+      () => fab as any,
+      () => this,
+      () => this
+    );
   }
 
   chain<B>(f: Function1<A, RemoteData<L, B>>): RemoteData<L, B> {
@@ -127,7 +139,7 @@ export class RemoteFailure<L, A> implements IRemoteData<L, A> {
     return {
       _URI: URI,
       _tag: this._tag,
-      error: this.error
+      error: this.error,
     };
   }
 
