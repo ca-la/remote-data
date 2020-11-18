@@ -43,6 +43,30 @@ test("caseOf", (t) => {
       caseMap.success
     )
   );
+
+  t.is(failureRD.caseOf(caseMap), 3);
+});
+
+test('wedgeCaseOf', t => {
+  const { failureRD } = t.context;
+  const wedgeCaseMap = {
+    none: 1,
+    failure: () => 2,
+    some: () => 3
+  };
+
+  t.is(
+    failureRD.wedgeCaseOf(wedgeCaseMap),
+    failureRD.fold(
+      wedgeCaseMap.none,
+      wedgeCaseMap.none,
+      wedgeCaseMap.failure,
+      wedgeCaseMap.some,
+      wedgeCaseMap.some
+    )
+  );
+
+  t.is(failureRD.wedgeCaseOf(wedgeCaseMap), 2);
 });
 
 test("getOrElse", (t) => {

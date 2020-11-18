@@ -24,7 +24,7 @@ test.beforeEach((t) => {
 });
 
 test("caseOf", (t) => {
-  const { failureRD } = t.context;
+  const { initialRD } = t.context;
   const caseMap = {
     initial: 1,
     pending: 2,
@@ -34,8 +34,8 @@ test("caseOf", (t) => {
   };
 
   t.is(
-    failureRD.caseOf(caseMap),
-    failureRD.fold(
+    initialRD.caseOf(caseMap),
+    initialRD.fold(
       caseMap.initial,
       caseMap.pending,
       caseMap.failure,
@@ -43,6 +43,29 @@ test("caseOf", (t) => {
       caseMap.success
     )
   );
+  t.is(initialRD.caseOf(caseMap), 1);
+});
+
+test("wedgeCaseOf", (t) => {
+  const { initialRD } = t.context;
+  const wedgeCaseMap = {
+    none: 1,
+    failure: () => 2,
+    some: () => 3,
+  };
+
+  t.is(
+    initialRD.wedgeCaseOf(wedgeCaseMap),
+    initialRD.fold(
+      wedgeCaseMap.none,
+      wedgeCaseMap.none,
+      wedgeCaseMap.failure,
+      wedgeCaseMap.some,
+      wedgeCaseMap.some
+    )
+  );
+
+  t.is(initialRD.wedgeCaseOf(wedgeCaseMap), 1);
 });
 
 test("getOrElse", (t) => {
