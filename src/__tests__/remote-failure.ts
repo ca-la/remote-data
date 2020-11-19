@@ -47,12 +47,12 @@ test("caseOf", (t) => {
   t.is(failureRD.caseOf(caseMap), 3);
 });
 
-test('wedgeCaseOf', t => {
+test("wedgeCaseOf", (t) => {
   const { failureRD } = t.context;
   const wedgeCaseMap = {
     none: 1,
     failure: () => 2,
-    some: () => 3
+    some: () => 3,
   };
 
   t.is(
