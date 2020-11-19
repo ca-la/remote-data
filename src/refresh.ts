@@ -20,6 +20,7 @@ import {
   IRemoteData,
   RemoteData,
   RemoteJSON,
+  WedgeCaseMap,
 } from "./remote-data";
 
 export class RemoteRefresh<L, A> implements IRemoteData<L, A> {
@@ -83,6 +84,10 @@ export class RemoteRefresh<L, A> implements IRemoteData<L, A> {
 
   caseOf<B>(caseMap: CaseMap<L, A, B>): B {
     return caseMap.refresh(this.value);
+  }
+
+  wedgeCaseOf<B>(caseMap: WedgeCaseMap<L, A, B>): B {
+    return caseMap.some(this.value);
   }
 
   foldL<B>(

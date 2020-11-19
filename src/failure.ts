@@ -20,6 +20,7 @@ import {
   IRemoteData,
   RemoteData,
   RemoteJSON,
+  WedgeCaseMap,
 } from "./remote-data";
 
 export class RemoteFailure<L, A> implements IRemoteData<L, A> {
@@ -70,6 +71,10 @@ export class RemoteFailure<L, A> implements IRemoteData<L, A> {
   }
 
   caseOf<B>(caseMap: CaseMap<L, A, B>): B {
+    return caseMap.failure(this.error);
+  }
+
+  wedgeCaseOf<B>(caseMap: WedgeCaseMap<L, A, B>): B {
     return caseMap.failure(this.error);
   }
 

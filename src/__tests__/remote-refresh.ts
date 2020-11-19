@@ -43,6 +43,29 @@ test("caseOf", (t) => {
       caseMap.success
     )
   );
+  t.is(refreshRD.caseOf(caseMap), 4);
+});
+
+test('wedgeCaseOf', t => {
+  const { refreshRD } = t.context;
+  const wedgeCaseMap = {
+    none: 1,
+    failure: () => 2,
+    some: () => 3
+  };
+
+  t.is(
+    refreshRD.wedgeCaseOf(wedgeCaseMap),
+    refreshRD.fold(
+      wedgeCaseMap.none,
+      wedgeCaseMap.none,
+      wedgeCaseMap.failure,
+      wedgeCaseMap.some,
+      wedgeCaseMap.some
+    )
+  );
+
+  t.is(refreshRD.wedgeCaseOf(wedgeCaseMap), 3);
 });
 
 test("getOrElse", (t) => {

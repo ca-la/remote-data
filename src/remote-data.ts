@@ -113,8 +113,8 @@ export interface IRemoteData<L, A> {
   ap: <B>(fab: RemoteData<L, Function1<A, B>>) => RemoteData<L, B>;
 
   /**
-   * Needed for "unwrap" value from `RemoteData` "container". It takes a
-   * mapping from `RemoteData` types to another value.
+   * Unwraps a value from `RemoteData. It takes a mapping from `RemoteData`
+   * types to another value.
    *
    * @example
    *
@@ -137,6 +137,31 @@ export interface IRemoteData<L, A> {
    * success(21).caseOf(caseMap) will return 22
    */
   caseOf: <B>(caseMap: CaseMap<L, A, B>) => B;
+
+  /**
+   * A variation of `caseMap` that collapses some of the cases. This is similar
+   * to the Haskell type "wedge" (hence the name), that is isomorphic to
+   * `Option<Either<L, A>>`, but allows you to match the variants all at once.
+   *
+   * @example
+   *
+   * const caseMap: WedgeCaseMap = {
+   *     none: "none",
+   *     failure: (err) => "failed",
+   *     some: (data) => data,
+   * }
+   *
+   * initial.wedgeCaseOf(caseMap) will return "none"
+   *
+   * pending.wedgeCaseOf(caseMap) will return "none"
+   *
+   * failure(new Error('error text')).wedgeCaseOf(caseMap) will return "failed"
+   *
+   * refresh(21).wedgeCaseOf(caseMap) will return 21
+   *
+   * success(21).wedgeCaseOf(caseMap) will return 21
+   */
+  wedgeCaseOf: <B>(wedgeCaseMap: WedgeCaseMap<L, A, B>) => B;
 
   /**
    * Takes a function `f` and returns the result of applying it to
@@ -345,6 +370,12 @@ export interface CaseMap<L, A, B> {
   pending: B;
   refresh: Function1<A, B>;
   success: Function1<A, B>;
+}
+
+export interface WedgeCaseMap<L, A, B> {
+  none: B;
+  failure: Function1<L, B>;
+  some: Function1<A, B>;
 }
 
 /**
